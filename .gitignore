@@ -13,3 +13,14 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+/.cache
+/.work
+/_output
+cover.out
+/vendor
+/.vendor-new
+/.github
+
+# ignore IDE folders
+.vscode/
