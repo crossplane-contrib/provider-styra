@@ -1,0 +1,396 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.0
+  creationTimestamp: null
+  name: stacks.styra.crossplane.io
+spec:
+  group: styra.crossplane.io
+  names:
+    categories:
+    - crossplane
+    - managed
+    - styra
+    kind: Stack
+    listKind: StackList
+    plural: stacks
+    singular: stack
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.conditions[?(@.type=='Ready')].status
+      name: READY
+      type: string
+    - jsonPath: .status.conditions[?(@.type=='Synced')].status
+      name: SYNCED
+      type: string
+    - jsonPath: .metadata.annotations.crossplane\.io/external-name
+      name: EXTERNAL-NAME
+      type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: A Stack is the schema for Styra Stacks API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: A StackSpec defines the desired state of a Stack.
+            properties:
+              deletionPolicy:
+                description: DeletionPolicy specifies what will happen to the underlying
+                  external when this managed resource is deleted - either "Delete"
+                  or "Orphan" the external resource. The "Delete" policy is the default
+                  when no policy is specified.
+                enum:
+                - Orphan
+                - Delete
+                type: string
+              forProvider:
+                description: A StackParameters defines desired state of a Stack
+                properties:
+                  description:
+                    description: description
+                    type: string
+                  readOnly:
+                    description: read only
+                    type: boolean
+                  selectorExclude:
+                    additionalProperties:
+                      items:
+                        type: string
+                      type: array
+                    description: SelectorExclude used to exclude systems from stack
+                      application
+                    type: object
+                  selectorInclude:
+                    additionalProperties:
+                      items:
+                        type: string
+                      type: array
+                    description: SelectorInclude used to identify systems to apply
+                      stack to
+                    type: object
+                  sourceControl:
+                    description: source control
+                    properties:
+                      origin:
+                        description: origin
+                        properties:
+                          credentials:
+                            description: Credentials are looked under the key <name>/<creds>
+                            type: string
+                          path:
+                            description: Path to limit the import to
+                            type: string
+                          reference:
+                            description: Remote reference, defaults to refs/heads/master
+                            type: string
+                          url:
+                            description: Repository URL
+                            type: string
+                        required:
+                        - credentials
+                        - path
+                        - reference
+                        - url
+                        type: object
+                    required:
+                    - origin
+                    type: object
+                  type:
+                    description: type
+                    type: string
+                required:
+                - description
+                - readOnly
+                - type
+                type: object
+              providerConfigRef:
+                description: ProviderConfigReference specifies how the provider that
+                  will be used to create, observe, update, and delete this managed
+                  resource should be configured.
+                properties:
+                  name:
+                    description: Name of the referenced object.
+                    type: string
+                required:
+                - name
+                type: object
+              providerRef:
+                description: 'ProviderReference specifies the provider that will be
+                  used to create, observe, update, and delete this managed resource.
+                  Deprecated: Please use ProviderConfigReference, i.e. `providerConfigRef`'
+                properties:
+                  name:
+                    description: Name of the referenced object.
+                    type: string
+                required:
+                - name
+                type: object
+              writeConnectionSecretToRef:
+                description: WriteConnectionSecretToReference specifies the namespace
+                  and name of a Secret to which any connection details for this managed
+                  resource should be written. Connection details frequently include
+                  the endpoint, username, and password required to connect to the
+                  managed resource.
+                properties:
+                  name:
+                    description: Name of the secret.
+                    type: string
+                  namespace:
+                    description: Namespace of the secret.
+                    type: string
+                required:
+                - name
+                - namespace
+                type: object
+            required:
+            - forProvider
+            type: object
+          status:
+            description: A StackStatus represents the status of a Stack.
+            properties:
+              atProvider:
+                description: A StackObservation defines the desired state of a Stack
+                properties:
+                  metadata:
+                    description: metadata
+                    properties:
+                      created_at:
+                        description: created at
+                        format: date-time
+                        type: string
+                      created_by:
+                        description: created by
+                        type: string
+                      created_through:
+                        description: created through
+                        type: string
+                      last_modified_at:
+                        description: last modified at
+                        format: date-time
+                        type: string
+                      last_modified_by:
+                        description: last modified by
+                        type: string
+                      last_modified_through:
+                        description: last modified through
+                        type: string
+                    type: object
+                  policies:
+                    description: policies
+                    items:
+                      description: V1PolicyConfig v1 policy config
+                      properties:
+                        created:
+                          description: policy on when to (re)generate the policy
+                          type: string
+                        enforcement:
+                          description: enforcement status of the policy
+                          properties:
+                            enforced:
+                              description: true if the policy is enforced
+                              type: boolean
+                            type:
+                              description: enforcement type e.g. opa, test, mask
+                              type: string
+                          required:
+                          - enforced
+                          - type
+                          type: object
+                        id:
+                          description: policy ID (path)
+                          type: string
+                        modules:
+                          description: rego modules policy consists of
+                          items:
+                            description: V1Module v1 module
+                            properties:
+                              name:
+                                description: module name
+                                type: string
+                              placeholder:
+                                description: module is a placeholder
+                                type: boolean
+                              read_only:
+                                description: true if module is read-only
+                                type: boolean
+                              rules:
+                                description: module rule count
+                                properties:
+                                  allow:
+                                    description: number of allow rules
+                                    format: int32
+                                    type: integer
+                                  deny:
+                                    description: number of deny rules
+                                    format: int32
+                                    type: integer
+                                  enforce:
+                                    description: number of enforce rules
+                                    format: int32
+                                    type: integer
+                                  ignore:
+                                    description: number of ignore rules
+                                    format: int32
+                                    type: integer
+                                  monitor:
+                                    description: number of monitor rules
+                                    format: int32
+                                    type: integer
+                                  notify:
+                                    description: number of notify rules
+                                    format: int32
+                                    type: integer
+                                  other:
+                                    description: number of unclassified rules
+                                    format: int32
+                                    type: integer
+                                  test:
+                                    description: number of test rules
+                                    format: int32
+                                    type: integer
+                                  total:
+                                    description: total number of rules
+                                    format: int32
+                                    type: integer
+                                required:
+                                - allow
+                                - deny
+                                - enforce
+                                - ignore
+                                - monitor
+                                - notify
+                                - other
+                                - test
+                                - total
+                                type: object
+                            required:
+                            - name
+                            - read_only
+                            type: object
+                          type: array
+                        rules:
+                          description: rule count
+                          properties:
+                            allow:
+                              description: number of allow rules
+                              format: int32
+                              type: integer
+                            deny:
+                              description: number of deny rules
+                              format: int32
+                              type: integer
+                            enforce:
+                              description: number of enforce rules
+                              format: int32
+                              type: integer
+                            ignore:
+                              description: number of ignore rules
+                              format: int32
+                              type: integer
+                            monitor:
+                              description: number of monitor rules
+                              format: int32
+                              type: integer
+                            notify:
+                              description: number of notify rules
+                              format: int32
+                              type: integer
+                            other:
+                              description: number of unclassified rules
+                              format: int32
+                              type: integer
+                            test:
+                              description: number of test rules
+                              format: int32
+                              type: integer
+                            total:
+                              description: total number of rules
+                              format: int32
+                              type: integer
+                          required:
+                          - allow
+                          - deny
+                          - enforce
+                          - ignore
+                          - monitor
+                          - notify
+                          - other
+                          - test
+                          - total
+                          type: object
+                        type:
+                          description: policy type e.g. validating/rules
+                          type: string
+                      required:
+                      - enforcement
+                      - id
+                      - modules
+                      - type
+                      type: object
+                    type: array
+                type: object
+              conditions:
+                description: Conditions of the resource.
+                items:
+                  description: A Condition that may apply to a resource.
+                  properties:
+                    lastTransitionTime:
+                      description: LastTransitionTime is the last time this condition
+                        transitioned from one status to another.
+                      format: date-time
+                      type: string
+                    message:
+                      description: A Message containing details about this condition's
+                        last transition from one status to another, if any.
+                      type: string
+                    reason:
+                      description: A Reason for this condition's last transition from
+                        one status to another.
+                      type: string
+                    status:
+                      description: Status of this condition; is it currently True,
+                        False, or Unknown?
+                      type: string
+                    type:
+                      description: Type of this condition. At most one of each condition
+                        type may apply to a resource at any point in time.
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+            required:
+            - atProvider
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []
