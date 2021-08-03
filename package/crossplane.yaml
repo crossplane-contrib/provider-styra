@@ -1,0 +1,7 @@
+apiVersion: meta.pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-styra
+spec:
+  controller:
+    image: crossplane/provider-styra-controller:VERSION

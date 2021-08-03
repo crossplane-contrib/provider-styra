@@ -1,0 +1,11 @@
+apiVersion: styra.crossplane.io/v1alpha1
+kind: System
+metadata:
+  name: example-system
+spec:
+  forProvider:
+    name: example-system
+    description: "Hello world"
+    type: kubernetes:v2
+  providerConfigRef:
+    name: styra-provider

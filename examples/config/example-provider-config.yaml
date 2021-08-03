@@ -1,0 +1,21 @@
+apiVersion: styra.crossplane.io/v1alpha1
+kind: ProviderConfig
+metadata:
+  name: styra-provider
+spec:
+  host: <host-name>
+  basepath: '/'
+  credentials:
+    secretRef:
+      key: credentials
+      name: styra-provider-creds
+      namespace: crossplane-system
+    source: Secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: styra-provider-creds
+type: Opaque
+data:
+  token: <token>
