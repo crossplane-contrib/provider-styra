@@ -8,8 +8,18 @@ Crossplane provider for [Styra DAS](https://styra.com). The provider built from 
 
 ## Getting Started and Documentation
 
-For getting started guides, installation, deployment, and administration, see
-our [Documentation](https://crossplane.io/docs/latest).
+For getting start with Crossplane setup installation and deployment, see the [official documentation](https://crossplane.io/docs/latest).
+
+### To use provider-styra
+
+1. Setup a [new Styra instance](https://signup.styra.com/) or use an existing one
+2. Create a new Styra API token, and store it in a K8s secret
+```bash
+kubectl create secret generic provider-styra-creds --from-literal=token=$API_TOKEN -n crossplane-system
+```
+3. Create a new [ProviderConfig](examples/config/example-provider-config.yaml) resource with a references to this secret
+
+You are now ready to create resources as described in [examples](examples).
 
 ## Contributing
 
