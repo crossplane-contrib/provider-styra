@@ -37,6 +37,8 @@ GO111MODULE = on
 # ====================================================================================
 # Setup Kubernetes tools
 
+USE_HELM3 = true
+HELM3_VERSION = v3.6.3
 -include build/makelib/k8s_tools.mk
 
 # ====================================================================================
@@ -75,15 +77,6 @@ crds.clean:
 
 generate: crds.clean
 
-# Ensure a PR is ready for review.
-reviewable: generate lint
-	@go mod tidy
-
-# Ensure branch is clean.
-check-diff: reviewable
-	@$(INFO) checking that branch is clean
-	@test -z "$$(git status --porcelain)" || $(FAIL)
-	@$(OK) branch is clean
 
 # integration tests
 e2e.run: test-integration
@@ -114,7 +107,7 @@ dev: generate
 manifests:
 	@$(INFO) Deprecated. Run make generate instead.
 
-.PHONY: cobertura reviewable submodules fallthrough test-integration run crds.clean manifests
+.PHONY: cobertura submodules fallthrough test-integration run crds.clean manifests
 
 # ====================================================================================
 # Special Targets

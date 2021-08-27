@@ -528,8 +528,6 @@ github.com/matttproud/golang_protobuf_extensions v1.0.1/go.mod h1:D8He9yQNgCq6Z5
 github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 h1:I0XW9+e1XWDxdcEniV4rQAIOPUGDq67JSCiRCgGCZLI=
 github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369/go.mod h1:BSXmuO+STAnVfrANrmjBb36TMTDstsz7MSK+HVaYKv4=
 github.com/miekg/dns v1.0.14/go.mod h1:W1PPwlIAgtquWBMBEV9nkV9Cazfe8ScdGz/Lj7v3Nrg=
-github.com/mistermx/styra-go-client v0.0.0-20210803080647-ea0be20e68ae h1:JHN5+4U/rESRHW/4w1jEsBCrinfne09exa+tSkO7m00=
-github.com/mistermx/styra-go-client v0.0.0-20210803080647-ea0be20e68ae/go.mod h1:NHL4heU7HTwXTYsP7W6iOviInbxb3FPVsIWcXoL6/+s=
 github.com/mistermx/styra-go-client v0.0.0-20210803105539-699032ae86b6 h1:9ReD00lgIt/S2uMkyKTTLPFNAgyydppkZM1etq7eYxk=
 github.com/mistermx/styra-go-client v0.0.0-20210803105539-699032ae86b6/go.mod h1:NHL4heU7HTwXTYsP7W6iOviInbxb3FPVsIWcXoL6/+s=
 github.com/mitchellh/cli v1.0.0/go.mod h1:hNIlj7HEI86fIcpObd7a0FcrxTWetlwJDGcceTlRvqc=
