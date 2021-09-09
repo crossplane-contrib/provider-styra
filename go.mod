@@ -10,6 +10,7 @@ require (
 	github.com/crossplane/crossplane-tools v0.0.0-20201201125637-9ddc70edfd0d
 	github.com/go-openapi/runtime v0.19.29
 	github.com/go-openapi/strfmt v0.20.1
+	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.4
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/mistermx/styra-go-client v0.0.0-20210803105539-699032ae86b6
