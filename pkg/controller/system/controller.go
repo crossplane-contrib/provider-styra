@@ -50,8 +50,11 @@ import (
 )
 
 const (
+	helmValuesAssetType            = "helm-values"
+	helmValuesConnectionDetailsKey = "helmValues"
+
 	errNotSystem                = "managed resource is not an system custom resource"
-	errKubeUpdateFailed         = "cannot update system custom resource"
+	errUpdateFailed             = "cannot update system"
 	errCreateFailed             = "cannot create system"
 	errDeleteFailed             = "cannot delete system"
 	errDescribeFailed           = "cannot describe system"
@@ -115,39 +118,33 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 		return managed.ExternalObservation{}, errors.New(errNotSystem)
 	}
 
-	id := meta.GetExternalName(cr)
-	if id == "" {
-		return managed.ExternalObservation{
-			ResourceExists:   false,
-			ResourceUpToDate: false,
-		}, nil
+	if meta.GetExternalName(cr) == "" {
+		return managed.ExternalObservation{}, nil
 	}
 
 	req := &systems.GetSystemParams{
 		Context: ctx,
 		System:  meta.GetExternalName(cr),
 	}
-	resp, reqErr := e.client.Systems.GetSystem(req)
-	if reqErr != nil {
-		return managed.ExternalObservation{ResourceExists: false}, errors.Wrap(resource.Ignore(IsNotFound, reqErr), errDescribeFailed)
+	resp, err := e.client.Systems.GetSystem(req)
+	if err != nil {
+		return managed.ExternalObservation{}, errors.Wrap(resource.Ignore(isNotFound, err), errDescribeFailed)
 	}
 
 	currentSpec := cr.Spec.ForProvider.DeepCopy()
-	GenerateSystem(resp.Payload.Result).Status.AtProvider.DeepCopyInto(&cr.Status.AtProvider)
+	generateSystem(resp.Payload.Result).Status.AtProvider.DeepCopyInto(&cr.Status.AtProvider)
 
 	e.LateInitialize(cr, resp.Payload.Result)
-	isUpToDate, isUpToDateErr := e.isUpToDate(ctx, cr, resp)
-	if isUpToDateErr != nil {
-		return managed.ExternalObservation{}, errors.Wrap(isUpToDateErr, errIsUpToDateFailed)
+	isUpToDate, err := e.isUpToDate(ctx, cr, resp)
+	if err != nil {
+		return managed.ExternalObservation{}, errors.Wrap(err, errIsUpToDateFailed)
 	}
 
 	cr.Status.SetConditions(v1.Available())
 
 	connectionDetails, err := e.GetConnectionDetails(ctx, cr)
 	if err != nil {
-		return managed.ExternalObservation{
-			ResourceExists: true,
-		}, errors.Wrap(err, errGetConnectionDetails)
+		return managed.ExternalObservation{}, errors.Wrap(err, errGetConnectionDetails)
 	}
 
 	return managed.ExternalObservation{
@@ -162,37 +159,22 @@ func (e *external) isUpToDate(ctx context.Context, cr *v1alpha1.System, resp *sy
 	if cr.ObjectMeta.Name != styraclient.StringValue(resp.Payload.Result.Name) {
 		return false, nil
 	}
-	if cr.Spec.ForProvider.BundleRegistry != nil && !isEqualBundleRegistry(cr.Spec.ForProvider.BundleRegistry, resp.Payload.Result.BundleRegistry) {
-		return false, nil
-	}
-	if cr.Spec.ForProvider.DecisionMappings != nil && !isEqualDecisionMapping(cr.Spec.ForProvider.DecisionMappings, resp.Payload.Result.DecisionMappings) {
-		return false, nil
-	}
 	if cr.Spec.ForProvider.DeploymentParameters != nil && !isEqualSystemDeploymentParameters(cr.Spec.ForProvider.DeploymentParameters, resp.Payload.Result.DeploymentParameters) {
 		return false, nil
 	}
-	if cr.Spec.ForProvider.Description != resp.Payload.Result.Description {
+	if styraclient.StringValue(cr.Spec.ForProvider.Description) != resp.Payload.Result.Description {
 		return false, nil
 	}
-	if cr.Spec.ForProvider.ExternalID != resp.Payload.Result.ExternalID {
+	if styraclient.StringValue(cr.Spec.ForProvider.ExternalID) != resp.Payload.Result.ExternalID {
 		return false, nil
 	}
 	if cr.Spec.ForProvider.ReadOnly != nil && !styraclient.IsEqualBool(cr.Spec.ForProvider.ReadOnly, resp.Payload.Result.ReadOnly) {
 		return false, nil
 	}
-	if !styraclient.IsEqualString(cr.Spec.ForProvider.Type, resp.Payload.Result.Type) {
+	if cr.Spec.ForProvider.Type != styraclient.StringValue(resp.Payload.Result.Type) {
 		return false, nil
 	}
-	if cr.Spec.ForProvider.SourceControl != nil && !isEqualSourceControlConfig(cr.Spec.ForProvider.SourceControl, resp.Payload.Result.SourceControl) {
-		return false, nil
-	}
-
-	labelsUpToDate, err := e.areLabelsUpToDate(ctx, cr)
-	if err != nil {
-		return false, err
-	}
-
-	return labelsUpToDate, nil
+	return e.areLabelsUpToDate(ctx, cr)
 }
 
 func (e *external) areLabelsUpToDate(ctx context.Context, cr *v1alpha1.System) (bool, error) {
@@ -206,7 +188,6 @@ func (e *external) areLabelsUpToDate(ctx context.Context, cr *v1alpha1.System) (
 		return false, errors.Wrap(err, errGetLabels)
 	}
 
-	// Q&D solution to get raw rego. There may be a more elegant solution for this
 	result, ok := res.Payload.Result.(map[string]interface{})
 	if !ok {
 		return false, errors.New(errGetLabelsInvalidResponse)
@@ -246,7 +227,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 
 	req := &systems.CreateSystemParams{
 		Context: ctx,
-		Body:    GenerateSystemPostRequest(cr),
+		Body:    generateSystemPostRequest(cr),
 	}
 
 	resp, err := e.client.Systems.CreateSystem(req)
@@ -256,23 +237,12 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 
 	meta.SetExternalName(cr, resp.Payload.Result.ID)
 
-	err = e.updateLabels(ctx, cr)
-	if err != nil {
-		return managed.ExternalCreation{
-			ExternalNameAssigned: true,
-		}, errors.Wrap(err, errGetConnectionDetails)
-	}
-
-	connectionDetails, err := e.GetConnectionDetails(ctx, cr)
-	if err != nil {
-		return managed.ExternalCreation{
-			ExternalNameAssigned: true,
-		}, errors.Wrap(err, errGetConnectionDetails)
-	}
+	// Do not create/update labels and connection details here because an error
+	// will result in a recreation of the system.
+	// This shall be handled in Update().
 
 	return managed.ExternalCreation{
 		ExternalNameAssigned: true,
-		ConnectionDetails:    connectionDetails,
 	}, nil
 }
 
@@ -285,16 +255,16 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 	req := &systems.UpdateSystemParams{
 		Context: ctx,
 		System:  meta.GetExternalName(cr),
-		Body:    GenerateSystemPutRequest(cr),
-	}
-
-	if err := e.updateLabels(ctx, cr); err != nil {
-		return managed.ExternalUpdate{}, errors.Wrap(err, errGetConnectionDetails)
+		Body:    generateSystemPutRequest(cr),
 	}
 
 	_, err := e.client.Systems.UpdateSystem(req)
 	if err != nil {
-		return managed.ExternalUpdate{}, errors.Wrap(err, errKubeUpdateFailed)
+		return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateFailed)
+	}
+
+	if err := e.updateLabels(ctx, cr); err != nil {
+		return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateFailed)
 	}
 
 	return managed.ExternalUpdate{}, nil
@@ -323,39 +293,16 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 }
 
 func (e *external) LateInitialize(cr *v1alpha1.System, resp *models.V1SystemConfig) {
-	// The commented fields are still missing implementation
+	system := generateSystem(resp)
 
-	system := GenerateSystem(resp)
-
-	if cr.Spec.ForProvider.BundleRegistry == nil && system.Spec.ForProvider.BundleRegistry != nil {
-		cr.Spec.ForProvider.BundleRegistry = system.Spec.ForProvider.BundleRegistry
-	}
-	// if system.DecisionMappings != nil {
-	// 	cr.Spec.ForProvider.DecisionMappings = make(map[string]v1alpha1.V1RuleDecisionMappings, len(system.DecisionMappings))
-	// 	for k, v := range system.DecisionMappings {
-	// 		n := &v1alpha1.V1RuleDecisionMappings{}
-	// 	}
-	// }
-
-	// DeploymentParameters
-
-	cr.Spec.ForProvider.Description = styraclient.LateInitializeString(cr.Spec.ForProvider.Description, &system.Spec.ForProvider.Description)
-
-	// Errors
-
-	cr.Spec.ForProvider.ExternalID = styraclient.LateInitializeString(cr.Spec.ForProvider.ExternalID, &system.Spec.ForProvider.ExternalID)
-
-	// Install
-
+	cr.Spec.ForProvider.Description = styraclient.LateInitializeStringPtr(cr.Spec.ForProvider.Description, system.Spec.ForProvider.Description)
+	cr.Spec.ForProvider.ExternalID = styraclient.LateInitializeStringPtr(cr.Spec.ForProvider.ExternalID, system.Spec.ForProvider.ExternalID)
 	cr.Spec.ForProvider.ReadOnly = styraclient.LateInitializeBoolPtr(cr.Spec.ForProvider.ReadOnly, system.Spec.ForProvider.ReadOnly)
-
-	// SourceControl
-
-	cr.Spec.ForProvider.Type = styraclient.LateInitializeStringPtr(cr.Spec.ForProvider.Type, system.Spec.ForProvider.Type)
+	cr.Spec.ForProvider.DeploymentParameters = lateInitializeDeploymentParameters(cr.Spec.ForProvider.DeploymentParameters, system.Spec.ForProvider.DeploymentParameters)
 }
 
 func (e *external) GetConnectionDetails(ctx context.Context, cr *v1alpha1.System) (managed.ConnectionDetails, error) {
-	if strings.HasPrefix(styraclient.StringValue(cr.Spec.ForProvider.Type), "kubernetes") {
+	if strings.HasPrefix(cr.Spec.ForProvider.Type, "kubernetes") {
 		return e.getConnectionDetailsKubernetes(ctx, cr)
 	}
 
@@ -367,7 +314,7 @@ func (e *external) getConnectionDetailsKubernetes(ctx context.Context, cr *v1alp
 	req := &systems.GetAssetParams{
 		Context:   ctx,
 		System:    meta.GetExternalName(cr),
-		Assettype: "helm-values",
+		Assettype: helmValuesAssetType,
 	}
 
 	buffer := bytes.Buffer{}
@@ -377,7 +324,7 @@ func (e *external) getConnectionDetailsKubernetes(ctx context.Context, cr *v1alp
 	}
 
 	return managed.ConnectionDetails{
-		"helmValues": buffer.Bytes(),
+		helmValuesConnectionDetailsKey: buffer.Bytes(),
 	}, nil
 }
 

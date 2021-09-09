@@ -42,9 +42,15 @@ func generateRegoLabels(cr *v1alpha1.System) (string, error) {
 		Labels map[string]string
 	}
 
+	labels := make(map[string]string, len(cr.Spec.ForProvider.Labels)+1)
+	labels["system-type"] = cr.Spec.ForProvider.Type
+	for key, value := range cr.Spec.ForProvider.Labels {
+		labels[key] = value
+	}
+
 	data := &templateData{
 		Name:   meta.GetExternalName(cr),
-		Labels: cr.Spec.ForProvider.Labels,
+		Labels: labels,
 	}
 
 	buffer := &bytes.Buffer{}
@@ -61,13 +67,14 @@ func compareLabels(ctx context.Context, labelsModule string, cr *v1alpha1.System
 		return false, errors.Wrap(err, errCannotParseLabels)
 	}
 
-	remaining := make(map[string]string, len(cr.Spec.ForProvider.Labels))
+	remaining := make(map[string]string, len(cr.Spec.ForProvider.Labels)+1)
+	remaining["system-type"] = cr.Spec.ForProvider.Type
 	for key, value := range cr.Spec.ForProvider.Labels {
 		remaining[key] = value
 	}
 
 	for key, value := range parsedLabels {
-		specValue, exists := cr.Spec.ForProvider.Labels[key]
+		specValue, exists := remaining[key]
 		if !exists {
 			return false, nil
 		}
