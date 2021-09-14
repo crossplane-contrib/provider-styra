@@ -1,11 +1,6 @@
 package system
 
 import (
-	"time"
-
-	"github.com/go-openapi/strfmt"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/mistermx/styra-go-client/pkg/client/systems"
 	"github.com/mistermx/styra-go-client/pkg/models"
 
@@ -26,15 +21,8 @@ func generateSystem(resp *models.V1SystemConfig) (cr *v1alpha1.System) { // noli
 			n.Category = v.Category
 			n.Type = v.Type
 			if v.Status != nil {
-				n.Status = &v1alpha1.V1Status{}
-				if v.Status.Code != nil {
-					n.Status.Code = v.Status.Code
-				}
-				if v.Status.Message != nil {
-					n.Status.Message = v.Status.Message
-				}
-				if v.Status.Timestamp != nil {
-					n.Status.Timestamp = generateTimePtr(v.Status.Timestamp)
+				n.Status = &v1alpha1.V1Status{
+					AuthzMigration: v.Status.AuthzMigration,
 				}
 			}
 			cr.Status.AtProvider.Datasources[i] = n
@@ -56,37 +44,9 @@ func generateSystem(resp *models.V1SystemConfig) (cr *v1alpha1.System) { // noli
 
 	cr.Spec.ForProvider.Description = &resp.Description
 
-	if resp.Errors != nil {
-		cr.Status.AtProvider.Errors = map[string]v1alpha1.V1AgentErrors{}
-		for k, e := range resp.Errors {
-			errors := v1alpha1.V1AgentErrors{}
-			errors.Waiting = e.Waiting
-			errors.Errors = make([]*v1alpha1.V1Status, len(e.Errors))
-			for i, ee := range e.Errors {
-				errors.Errors[i] = &v1alpha1.V1Status{
-					Code:      ee.Code,
-					Message:   ee.Message,
-					Timestamp: generateTimePtr(ee.Timestamp),
-				}
-			}
-			cr.Status.AtProvider.Errors[k] = errors
-		}
-	}
-
 	cr.Spec.ForProvider.ExternalID = &resp.ExternalID
 	cr.Spec.ForProvider.ReadOnly = resp.ReadOnly
 	cr.Spec.ForProvider.Type = styraclient.StringValue(resp.Type)
-
-	if resp.Warnings != nil {
-		cr.Status.AtProvider.Warnings = map[string]v1alpha1.V1SystemConfigWarnings{}
-		for k, w := range resp.Warnings {
-			cr.Status.AtProvider.Warnings[k] = v1alpha1.V1SystemConfigWarnings{
-				Code:      w.Code,
-				Message:   w.Message,
-				Timestamp: generateTimePtr(w.Timestamp),
-			}
-		}
-	}
 
 	return cr
 }
@@ -153,17 +113,6 @@ func lateInitializeDeploymentParameters(spec *v1alpha1.V1SystemDeploymentParamet
 	}
 	spec.TrustedContainerRegistry = styraclient.LateInitializeStringPtr(spec.TrustedContainerRegistry, current.TrustedContainerRegistry)
 	return spec
-}
-
-// generateTimePtr generates v1.Time from strfmt.DateTime
-func generateTimePtr(d *strfmt.DateTime) *v1.Time {
-	if d == nil || d.Equal(strfmt.DateTime{}) {
-		return nil
-	}
-
-	t := time.Time(*d)
-	vt := v1.NewTime(t)
-	return &vt
 }
 
 // isNotFound returns whether the given error is of type NotFound or not.

@@ -65,12 +65,6 @@ type SystemSpec struct {
 type SystemObservation struct {
 	// datasources created for the system
 	Datasources []*V1DatasourceConfig `json:"datasources,omitempty"`
-
-	// current deployment errors
-	Errors map[string]V1AgentErrors `json:"errors,omitempty"`
-
-	// current deployment warnings
-	Warnings map[string]V1SystemConfigWarnings `json:"warnings,omitempty"`
 }
 
 // A SystemStatus represents the status of a System.

@@ -16,10 +16,6 @@ limitations under the License.
 
 package v1alpha1
 
-import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
-
 // V1DatasourceConfig v1 datasource config
 type V1DatasourceConfig struct {
 
@@ -44,18 +40,8 @@ type V1DatasourceConfig struct {
 
 // V1Status v1 status
 type V1Status struct {
-
-	// code
-	// +kubebuilder:validation:Required
-	Code *string `json:"code"`
-
-	// message
-	// +kubebuilder:validation:Required
-	Message *string `json:"message"`
-
-	// timestamp
-	// +kubebuilder:validation:Required
-	Timestamp *metav1.Time `json:"timestamp"`
+	// authz migration
+	AuthzMigration *string `json:"authz_migration,omitempty"`
 }
 
 // V1SystemDeploymentParameters v1 system deployment parameters
@@ -90,32 +76,4 @@ type V1SystemDeploymentParameters struct {
 
 	// trusted container registry
 	TrustedContainerRegistry *string `json:"trustedContainerRegistry,omitempty"`
-}
-
-// V1AgentErrors v1 agent errors
-type V1AgentErrors struct {
-
-	// list of system errors
-	// +kubebuilder:validation:Required
-	Errors []*V1Status `json:"errors"`
-
-	// true if the the system is waiting for error to be resolved
-	// +kubebuilder:validation:Required
-	Waiting *bool `json:"waiting"`
-}
-
-// V1SystemConfigWarnings v1 system config warnings
-type V1SystemConfigWarnings struct {
-
-	// code
-	// +kubebuilder:validation:Required
-	Code *string `json:"code"`
-
-	// message
-	// +kubebuilder:validation:Required
-	Message *string `json:"message"`
-
-	// timestamp
-	// +kubebuilder:validation:Required
-	Timestamp *metav1.Time `json:"timestamp"`
 }
