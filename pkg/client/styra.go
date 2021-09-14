@@ -18,6 +18,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 
 	httptransport "github.com/go-openapi/runtime/client"
 
@@ -41,7 +42,7 @@ const (
 	errExtractSecret                  = "cannot extract credentials from secret"
 	errExtractSecretKey               = "cannot extract secret key"
 	errGetCredentialsSecret           = "cannot get credentials secret"
-	errInvalidSecretData              = "'token' is required in secret data"
+	errInvalidSecretData              = "'%s' is required in secret data"
 )
 
 // GetConfig constructs an *httptransport.Runtime that can be used to connect to Styra
@@ -103,10 +104,10 @@ func extractCredentialsFromSecret(ctx context.Context, client client.Client, s x
 		return nil, errors.Wrap(err, errGetCredentialsSecret)
 	}
 
-	token := secret.Data["token"]
+	token := secret.Data[s.SecretRef.Key]
 
 	if token == nil {
-		return nil, errors.New(errInvalidSecretData)
+		return nil, errors.New(fmt.Sprintf(errInvalidSecretData, s.SecretRef.Key))
 	}
 
 	creds := &providerCredentials{
