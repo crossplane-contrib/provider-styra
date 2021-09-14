@@ -183,20 +183,9 @@ spec:
                         status:
                           description: datasource status
                           properties:
-                            code:
-                              description: code
+                            authz_migration:
+                              description: authz migration
                               type: string
-                            message:
-                              description: message
-                              type: string
-                            timestamp:
-                              description: timestamp
-                              format: date-time
-                              type: string
-                          required:
-                          - code
-                          - message
-                          - timestamp
                           type: object
                         type:
                           description: pull or push
@@ -207,62 +196,6 @@ spec:
                       - type
                       type: object
                     type: array
-                  errors:
-                    additionalProperties:
-                      description: V1AgentErrors v1 agent errors
-                      properties:
-                        errors:
-                          description: list of system errors
-                          items:
-                            description: V1Status v1 status
-                            properties:
-                              code:
-                                description: code
-                                type: string
-                              message:
-                                description: message
-                                type: string
-                              timestamp:
-                                description: timestamp
-                                format: date-time
-                                type: string
-                            required:
-                            - code
-                            - message
-                            - timestamp
-                            type: object
-                          type: array
-                        waiting:
-                          description: true if the the system is waiting for error
-                            to be resolved
-                          type: boolean
-                      required:
-                      - errors
-                      - waiting
-                      type: object
-                    description: current deployment errors
-                    type: object
-                  warnings:
-                    additionalProperties:
-                      description: V1SystemConfigWarnings v1 system config warnings
-                      properties:
-                        code:
-                          description: code
-                          type: string
-                        message:
-                          description: message
-                          type: string
-                        timestamp:
-                          description: timestamp
-                          format: date-time
-                          type: string
-                      required:
-                      - code
-                      - message
-                      - timestamp
-                      type: object
-                    description: current deployment warnings
-                    type: object
                 type: object
               conditions:
                 description: Conditions of the resource.

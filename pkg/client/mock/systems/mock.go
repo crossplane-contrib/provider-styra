@@ -116,6 +116,26 @@ func (mr *MockClientServiceMockRecorder) DeleteUserBranchSystem(arg0 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUserBranchSystem", reflect.TypeOf((*MockClientService)(nil).DeleteUserBranchSystem), varargs...)
 }
 
+// Func1 mocks base method.
+func (m *MockClientService) Func1(arg0 *systems.Func1Params, arg1 ...systems.ClientOption) (*systems.Func1OK, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0}
+	for _, a := range arg1 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Func1", varargs...)
+	ret0, _ := ret[0].(*systems.Func1OK)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Func1 indicates an expected call of Func1.
+func (mr *MockClientServiceMockRecorder) Func1(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0}, arg1...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Func1", reflect.TypeOf((*MockClientService)(nil).Func1), varargs...)
+}
+
 // GetAsset mocks base method.
 func (m *MockClientService) GetAsset(arg0 *systems.GetAssetParams, arg1 io.Writer, arg2 ...systems.ClientOption) (*systems.GetAssetOK, error) {
 	m.ctrl.T.Helper()
@@ -134,6 +154,46 @@ func (mr *MockClientServiceMockRecorder) GetAsset(arg0, arg1 interface{}, arg2 .
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAsset", reflect.TypeOf((*MockClientService)(nil).GetAsset), varargs...)
+}
+
+// GetDefaultPolicies mocks base method.
+func (m *MockClientService) GetDefaultPolicies(arg0 *systems.GetDefaultPoliciesParams, arg1 ...systems.ClientOption) (*systems.GetDefaultPoliciesOK, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0}
+	for _, a := range arg1 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetDefaultPolicies", varargs...)
+	ret0, _ := ret[0].(*systems.GetDefaultPoliciesOK)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDefaultPolicies indicates an expected call of GetDefaultPolicies.
+func (mr *MockClientServiceMockRecorder) GetDefaultPolicies(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0}, arg1...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDefaultPolicies", reflect.TypeOf((*MockClientService)(nil).GetDefaultPolicies), varargs...)
+}
+
+// GetDefaultPolicy mocks base method.
+func (m *MockClientService) GetDefaultPolicy(arg0 *systems.GetDefaultPolicyParams, arg1 ...systems.ClientOption) (*systems.GetDefaultPolicyOK, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0}
+	for _, a := range arg1 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetDefaultPolicy", varargs...)
+	ret0, _ := ret[0].(*systems.GetDefaultPolicyOK)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDefaultPolicy indicates an expected call of GetDefaultPolicy.
+func (mr *MockClientServiceMockRecorder) GetDefaultPolicy(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0}, arg1...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDefaultPolicy", reflect.TypeOf((*MockClientService)(nil).GetDefaultPolicy), varargs...)
 }
 
 // GetInstructions mocks base method.
@@ -469,7 +529,7 @@ func (mr *MockClientServiceMockRecorder) UpdateSystemBundleDeploy(arg0 interface
 }
 
 // ValidateSystemCompliance mocks base method.
-func (m *MockClientService) ValidateSystemCompliance(arg0 *systems.ValidateSystemComplianceParams, arg1 ...systems.ClientOption) (*systems.ValidateSystemComplianceOK, error) {
+func (m *MockClientService) ValidateSystemCompliance(arg0 *systems.ValidateSystemComplianceParams, arg1 ...systems.ClientOption) (*systems.ValidateSystemComplianceOK, *systems.ValidateSystemComplianceAccepted, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
@@ -477,8 +537,9 @@ func (m *MockClientService) ValidateSystemCompliance(arg0 *systems.ValidateSyste
 	}
 	ret := m.ctrl.Call(m, "ValidateSystemCompliance", varargs...)
 	ret0, _ := ret[0].(*systems.ValidateSystemComplianceOK)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(*systems.ValidateSystemComplianceAccepted)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // ValidateSystemCompliance indicates an expected call of ValidateSystemCompliance.
