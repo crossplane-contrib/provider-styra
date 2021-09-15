@@ -41,9 +41,7 @@ func generateSystem(resp *models.V1SystemConfig) (cr *v1alpha1.System) { // noli
 			TrustedContainerRegistry: styraclient.String(resp.DeploymentParameters.TrustedContainerRegistry),
 		}
 	}
-
 	cr.Spec.ForProvider.Description = &resp.Description
-
 	cr.Spec.ForProvider.ExternalID = &resp.ExternalID
 	cr.Spec.ForProvider.ReadOnly = resp.ReadOnly
 	cr.Spec.ForProvider.Type = styraclient.StringValue(resp.Type)
