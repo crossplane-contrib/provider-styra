@@ -44,6 +44,7 @@ type StackParameters struct {
 	ReadOnly bool `json:"readOnly"`
 
 	// source control
+	// +optional
 	SourceControl *V1SourceControlConfig `json:"sourceControl,omitempty"`
 
 	// type
@@ -57,19 +58,9 @@ type StackSpec struct {
 	ForProvider       StackParameters `json:"forProvider"`
 }
 
-// A StackObservation defines the desired state of a Stack
-type StackObservation struct {
-	// metadata
-	Metadata *V1ObjectMeta `json:"metadata,omitempty"`
-
-	// policies
-	Policies []*V1PolicyConfig `json:"policies,omitempty"`
-}
-
 // A StackStatus represents the status of a Stack.
 type StackStatus struct {
 	xpv1.ResourceStatus `json:",inline"`
-	AtProvider          StackObservation `json:"atProvider"`
 }
 
 // +kubebuilder:object:root=true
