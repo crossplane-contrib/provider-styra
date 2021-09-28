@@ -24,6 +24,8 @@ import (
 
 // CustomSystemParameters that are not part of the Styra API spec.
 type CustomSystemParameters struct {
+	// Labels for this systems
+	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
 }
 
@@ -31,30 +33,26 @@ type CustomSystemParameters struct {
 type SystemParameters struct {
 	CustomSystemParameters `json:",inline"`
 
-	// bundle registry configuration
-	BundleRegistry *V1BundleRegistryConfig `json:"bundleRegistry,omitempty"`
-
-	// location of key attributes and additional columns in the decisions grouped by policy entry point path
-	DecisionMappings map[string]V1RuleDecisionMappings `json:"decisionMappings,omitempty"`
-
 	// configuration settings to be used by the system agents
+	// +optional
 	DeploymentParameters *V1SystemDeploymentParameters `json:"deploymentParameters,omitempty"`
 
 	// description for the system
-	Description string `json:"description,omitempty"`
+	// +optional
+	Description *string `json:"description,omitempty"`
 
 	// external system ID
-	ExternalID string `json:"externalId,omitempty"`
+	// +optional
+	ExternalID *string `json:"externalId,omitempty"`
 
 	// prevents users from modifying policies using Styra UIs
+	// +optional
 	ReadOnly *bool `json:"readOnly,omitempty"`
-
-	// source control system configuration
-	SourceControl *V1SourceControlConfig `json:"sourceControl,omitempty"`
 
 	// system type e.g. kubernetes
 	// +kubebuilder:validation:Required
-	Type *string `json:"type"`
+	// +immutable
+	Type string `json:"type"`
 }
 
 // A SystemSpec defines the desired state of a System.
@@ -65,35 +63,8 @@ type SystemSpec struct {
 
 // A SystemObservation defines the desired state of a System
 type SystemObservation struct {
-	// authorization config
-	Authz *V1AuthzConfig `json:"authz,omitempty"`
-
 	// datasources created for the system
 	Datasources []*V1DatasourceConfig `json:"datasources,omitempty"`
-
-	// current deployment errors
-	Errors map[string]V1AgentErrors `json:"errors,omitempty"`
-
-	// system ID
-	ID string `json:"id,omitempty"`
-
-	// // installation instructions by installation method and asset type (deprecated)
-	// Install map[string]V1SystemConfigInstall `json:"install,omitempty"`
-
-	// system object metadata
-	Metadata *V1ObjectMeta `json:"metadata,omitempty"`
-
-	// policies created for the system
-	Policies []*V1PolicyConfig `json:"policies,omitempty"`
-
-	// tokens created for the system
-	Tokens []*V1Token `json:"tokens,omitempty"`
-
-	// uninstallation instructions by installation method (deprecated)
-	Uninstall map[string]string `json:"uninstall,omitempty"`
-
-	// current deployment warnings
-	Warnings map[string]V1SystemConfigWarnings `json:"warnings,omitempty"`
 }
 
 // A SystemStatus represents the status of a System.

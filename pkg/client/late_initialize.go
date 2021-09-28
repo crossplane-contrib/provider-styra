@@ -40,6 +40,15 @@ func LateInitializeInt64Ptr(in *int64, from *int64) *int64 {
 	return from
 }
 
+// LateInitializeInt32Ptr returns in if it's non-nil, otherwise returns from
+// which is the backup for the cases in is nil.
+func LateInitializeInt32Ptr(in *int32, from *int32) *int32 {
+	if in != nil {
+		return in
+	}
+	return from
+}
+
 // LateInitializeBoolPtr returns in if it's non-nil, otherwise returns from
 // which is the backup for the cases in is nil.
 func LateInitializeBoolPtr(in *bool, from *bool) *bool {
