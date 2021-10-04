@@ -49,7 +49,7 @@ import (
 
 const (
 	errNotStack                    = "managed resource is not an Stack custom resource"
-	errKubeUpdateFailed            = "cannot update Stack custom resource"
+	errUpdateFailed                = "cannot update Stack custom resource"
 	errCreateFailed                = "cannot create Stack"
 	errDeleteFailed                = "cannot delete Stack"
 	errDescribeFailed              = "cannot describe Stack"
@@ -101,7 +101,6 @@ func (c *connector) Connect(ctx context.Context, mg resource.Managed) (managed.E
 	}
 
 	client := c.newClientFn(cfg, strfmt.Default)
-
 	return &external{client, c.kube}, nil
 }
 
@@ -129,7 +128,6 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	}
 
 	currentSpec := cr.Spec.ForProvider.DeepCopy()
-	GenerateStack(resp.Payload.Result).Status.AtProvider.DeepCopyInto(&cr.Status.AtProvider)
 	e.LateInitialize(cr, resp)
 
 	isUpToDate, err := e.isUpToDate(ctx, cr, resp)
@@ -147,9 +145,6 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 }
 
 func (e *external) isUpToDate(ctx context.Context, cr *v1alpha1.Stack, resp *stacks.GetStackOK) (bool, error) { // nolint:gocyclo
-	if cr.ObjectMeta.Name != styraclient.StringValue(resp.Payload.Result.Name) {
-		return false, nil
-	}
 	if cr.Spec.ForProvider.Description != styraclient.StringValue(resp.Payload.Result.Description) {
 		return false, nil
 	}
@@ -159,7 +154,9 @@ func (e *external) isUpToDate(ctx context.Context, cr *v1alpha1.Stack, resp *sta
 	if cr.Spec.ForProvider.Type != styraclient.StringValue(resp.Payload.Result.Type) {
 		return false, nil
 	}
-
+	if !isEqualSourceControlConfig(cr.Spec.ForProvider.SourceControl, resp.Payload.Result.SourceControl) {
+		return false, nil
+	}
 	return e.areSelectorsUpToDate(ctx, cr)
 }
 
@@ -198,8 +195,7 @@ func (e *external) areSelectorsUpToDate(ctx context.Context, cr *v1alpha1.Stack)
 		return false, errors.New(errGetSelectorsInvalidResponse)
 	}
 
-	selectorsAreEqual, err := compareselectors(selectorsModule, cr)
-
+	selectorsAreEqual, err := compareSelectors(selectorsModule, cr)
 	return selectorsAreEqual, errors.Wrap(err, errCompareSelectors)
 }
 
@@ -211,7 +207,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 
 	req := &stacks.CreateStackParams{
 		Context: ctx,
-		Body:    GenerateStackPostRequest(cr),
+		Body:    generateStackPostRequest(cr),
 	}
 
 	resp, err := e.client.Stacks.CreateStack(req)
@@ -220,11 +216,6 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 	}
 
 	meta.SetExternalName(cr, styraclient.StringValue(resp.Payload.Result.ID))
-
-	if err := e.updateSelectors(ctx, cr); err != nil {
-		return managed.ExternalCreation{}, errors.Wrap(err, errUpdateSelectors)
-	}
-
 	return managed.ExternalCreation{
 		ExternalNameAssigned: true,
 	}, nil
@@ -239,15 +230,15 @@ func (e *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 	req := &stacks.UpdateStackParams{
 		Context: ctx,
 		Stack:   meta.GetExternalName(cr),
-		Body:    GenerateStackPutRequest(cr),
+		Body:    generateStackPutRequest(cr),
 	}
 
 	if _, err := e.client.Stacks.UpdateStack(req); err != nil {
-		return managed.ExternalUpdate{}, errors.Wrap(err, errKubeUpdateFailed)
+		return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateFailed)
 	}
 
 	if err := e.updateSelectors(ctx, cr); err != nil {
-		return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateSelectors)
+		return managed.ExternalUpdate{}, errors.Wrap(err, errUpdateFailed)
 	}
 
 	return managed.ExternalUpdate{}, nil
@@ -276,24 +267,8 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 }
 
 func (e *external) LateInitialize(cr *v1alpha1.Stack, resp *stacks.GetStackOK) {
-	// The following fields are missing implementation:
-
-	// stack := GenerateStack(resp.Payload.Result)
-
-	// if resp.DecisionMappings != nil {
-	// 	cr.Spec.ForProvider.DecisionMappings = make(map[string]v1alpha1.V1RuleDecisionMappings, len(resp.DecisionMappings))
-	// 	for k, v := range resp.DecisionMappings {
-	// 		n := &v1alpha1.V1RuleDecisionMappings{}
-	// 	}
-	// }
-
-	// DeploymentParameters
-
-	// Errors
-
-	// Install
-
-	// SourceControl
+	stack := generateStack(resp.Payload.Result)
+	cr.Spec.ForProvider.SourceControl = lateInitializeSourceControlConfig(cr.Spec.ForProvider.SourceControl, stack.Spec.ForProvider.SourceControl)
 }
 
 func (e *external) updateSelectors(ctx context.Context, cr *v1alpha1.Stack) error {

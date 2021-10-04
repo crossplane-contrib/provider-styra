@@ -77,7 +77,7 @@ func generateRegoSelectors(cr *v1alpha1.Stack) (string, error) {
 	return buffer.String(), nil
 }
 
-func compareselectors(selectorsModule string, cr *v1alpha1.Stack) (bool, error) {
+func compareSelectors(selectorsModule string, cr *v1alpha1.Stack) (bool, error) {
 	include, exclude, err := extractRegoSelectors(selectorsModule)
 	if err != nil {
 		return false, errors.Wrap(err, errParseSelectors)
