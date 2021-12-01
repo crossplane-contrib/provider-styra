@@ -9,7 +9,7 @@ import (
 )
 
 // GenerateStack generates a V1StackConfig from Stack
-func generateStack(resp *models.V1StackConfig) (cr *v1alpha1.Stack) {
+func generateStack(resp *models.StacksV1StackConfig) (cr *v1alpha1.Stack) {
 	cr = &v1alpha1.Stack{}
 
 	if resp.SourceControl != nil && resp.SourceControl.Origin != nil {
@@ -25,9 +25,9 @@ func generateStack(resp *models.V1StackConfig) (cr *v1alpha1.Stack) {
 	return cr
 }
 
-// GenerateStackPostRequest generates models.V1StacksPostRequest from v1alpha1.Stack
-func generateStackPostRequest(cr *v1alpha1.Stack) *models.V1StacksPostRequest {
-	return &models.V1StacksPostRequest{
+// GenerateStackPostRequest generates models.StacksV1StacksPostRequest from v1alpha1.Stack
+func generateStackPostRequest(cr *v1alpha1.Stack) *models.StacksV1StacksPostRequest {
+	return &models.StacksV1StacksPostRequest{
 		Description:   styraclient.String(cr.Spec.ForProvider.Description),
 		Name:          styraclient.String(cr.ObjectMeta.Name),
 		ReadOnly:      styraclient.Bool(cr.Spec.ForProvider.ReadOnly),
@@ -36,9 +36,9 @@ func generateStackPostRequest(cr *v1alpha1.Stack) *models.V1StacksPostRequest {
 	}
 }
 
-// GenerateStackPutRequest generates models.V1StacksPutRequest from v1alpha1.Stack
-func generateStackPutRequest(cr *v1alpha1.Stack) *models.V1StacksPutRequest {
-	return &models.V1StacksPutRequest{
+// GenerateStackPutRequest generates models.StacksV1StacksPutRequest from v1alpha1.Stack
+func generateStackPutRequest(cr *v1alpha1.Stack) *models.StacksV1StacksPutRequest {
+	return &models.StacksV1StacksPutRequest{
 		Description:   styraclient.String(cr.Spec.ForProvider.Description),
 		Name:          styraclient.String(cr.ObjectMeta.Name),
 		ReadOnly:      styraclient.Bool(cr.Spec.ForProvider.ReadOnly),
@@ -47,12 +47,12 @@ func generateStackPutRequest(cr *v1alpha1.Stack) *models.V1StacksPutRequest {
 	}
 }
 
-func generateModelSourceControlConfig(spec *v1alpha1.V1SourceControlConfig) *models.V1SourceControlConfig {
+func generateModelSourceControlConfig(spec *v1alpha1.V1SourceControlConfig) *models.StacksV1SourceControlConfig {
 	if spec == nil {
 		return nil
 	}
-	return &models.V1SourceControlConfig{
-		Origin: &models.V1GitRepoConfig{
+	return &models.StacksV1SourceControlConfig{
+		Origin: &models.GitV1GitRepoConfig{
 			Credentials: styraclient.String(spec.Origin.Credentials),
 			Path:        styraclient.String(spec.Origin.Path),
 			Reference:   styraclient.String(spec.Origin.Reference),

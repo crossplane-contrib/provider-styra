@@ -1,0 +1,16 @@
+apiVersion: styra.crossplane.io/v1alpha1
+kind: DataSource
+metadata:
+  name: example-bundle-s3
+spec:
+  forProvider:
+    category: bundle/s3
+    type: pull
+    onPremises: false
+    bundleS3:
+      bucket: my-bucket
+      credentials: example-secret
+      path: /
+      region: us-west-1
+  providerConfigRef:
+    name: styra-provider

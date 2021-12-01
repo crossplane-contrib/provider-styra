@@ -116,26 +116,6 @@ func (mr *MockClientServiceMockRecorder) DeleteUserBranchSystem(arg0 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUserBranchSystem", reflect.TypeOf((*MockClientService)(nil).DeleteUserBranchSystem), varargs...)
 }
 
-// Func1 mocks base method.
-func (m *MockClientService) Func1(arg0 *systems.Func1Params, arg1 ...systems.ClientOption) (*systems.Func1OK, error) {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0}
-	for _, a := range arg1 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "Func1", varargs...)
-	ret0, _ := ret[0].(*systems.Func1OK)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Func1 indicates an expected call of Func1.
-func (mr *MockClientServiceMockRecorder) Func1(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0}, arg1...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Func1", reflect.TypeOf((*MockClientService)(nil).Func1), varargs...)
-}
-
 // GetAsset mocks base method.
 func (m *MockClientService) GetAsset(arg0 *systems.GetAssetParams, arg1 io.Writer, arg2 ...systems.ClientOption) (*systems.GetAssetOK, error) {
 	m.ctrl.T.Helper()
@@ -468,6 +448,26 @@ func (mr *MockClientServiceMockRecorder) SetTransport(arg0 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTransport", reflect.TypeOf((*MockClientService)(nil).SetTransport), arg0)
 }
 
+// SourceControlVerifyConfigSystem mocks base method.
+func (m *MockClientService) SourceControlVerifyConfigSystem(arg0 *systems.SourceControlVerifyConfigSystemParams, arg1 ...systems.ClientOption) (*systems.SourceControlVerifyConfigSystemOK, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0}
+	for _, a := range arg1 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SourceControlVerifyConfigSystem", varargs...)
+	ret0, _ := ret[0].(*systems.SourceControlVerifyConfigSystemOK)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SourceControlVerifyConfigSystem indicates an expected call of SourceControlVerifyConfigSystem.
+func (mr *MockClientServiceMockRecorder) SourceControlVerifyConfigSystem(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0}, arg1...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SourceControlVerifyConfigSystem", reflect.TypeOf((*MockClientService)(nil).SourceControlVerifyConfigSystem), varargs...)
+}
+
 // TranslateExternalIds mocks base method.
 func (m *MockClientService) TranslateExternalIds(arg0 *systems.TranslateExternalIdsParams, arg1 ...systems.ClientOption) (*systems.TranslateExternalIdsOK, error) {
 	m.ctrl.T.Helper()
@@ -506,6 +506,26 @@ func (mr *MockClientServiceMockRecorder) UpdateSystem(arg0 interface{}, arg1 ...
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSystem", reflect.TypeOf((*MockClientService)(nil).UpdateSystem), varargs...)
+}
+
+// UpdateSystemBundleCompile mocks base method.
+func (m *MockClientService) UpdateSystemBundleCompile(arg0 *systems.UpdateSystemBundleCompileParams, arg1 ...systems.ClientOption) (*systems.UpdateSystemBundleCompileOK, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0}
+	for _, a := range arg1 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpdateSystemBundleCompile", varargs...)
+	ret0, _ := ret[0].(*systems.UpdateSystemBundleCompileOK)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateSystemBundleCompile indicates an expected call of UpdateSystemBundleCompile.
+func (mr *MockClientServiceMockRecorder) UpdateSystemBundleCompile(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0}, arg1...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSystemBundleCompile", reflect.TypeOf((*MockClientService)(nil).UpdateSystemBundleCompile), varargs...)
 }
 
 // UpdateSystemBundleDeploy mocks base method.

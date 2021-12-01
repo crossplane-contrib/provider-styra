@@ -222,12 +222,12 @@ func TestObserve(t *testing.T) {
 								Context:  context.Background(),
 							}).
 							Return(&secrets.GetSecretOK{
-								Payload: &models.V1SecretsGetResponse{
-									Result: &models.V1Secret{
+								Payload: &models.SecretsV1SecretsGetResponse{
+									Result: &models.SecretsV1Secret{
 										Description: &testDescription,
 										ID:          &testSecretID,
 										Name:        &testSecretID,
-										Metadata: &models.V1ObjectMeta{
+										Metadata: &models.MetaV1ObjectMeta{
 											LastModifiedAt: strfmt.DateTime(timeNow),
 										},
 									},
@@ -323,12 +323,12 @@ func TestObserve(t *testing.T) {
 								Context:  context.Background(),
 							}).
 							Return(&secrets.GetSecretOK{
-								Payload: &models.V1SecretsGetResponse{
-									Result: &models.V1Secret{
+								Payload: &models.SecretsV1SecretsGetResponse{
+									Result: &models.SecretsV1Secret{
 										Description: &testDescription,
 										ID:          &testSecretID,
 										Name:        &testSecretID,
-										Metadata: &models.V1ObjectMeta{
+										Metadata: &models.MetaV1ObjectMeta{
 											LastModifiedAt: strfmt.DateTime(timeNow),
 										},
 									},
@@ -427,12 +427,12 @@ func TestObserve(t *testing.T) {
 								Context:  context.Background(),
 							}).
 							Return(&secrets.GetSecretOK{
-								Payload: &models.V1SecretsGetResponse{
-									Result: &models.V1Secret{
+								Payload: &models.SecretsV1SecretsGetResponse{
+									Result: &models.SecretsV1Secret{
 										Description: &testDescription,
 										ID:          &testSecretID,
 										Name:        &testSecretID,
-										Metadata: &models.V1ObjectMeta{
+										Metadata: &models.MetaV1ObjectMeta{
 											LastModifiedAt: strfmt.DateTime(timeNow),
 										},
 									},
@@ -619,12 +619,12 @@ func TestObserve(t *testing.T) {
 								Context:  context.Background(),
 							}).
 							Return(&secrets.GetSecretOK{
-								Payload: &models.V1SecretsGetResponse{
-									Result: &models.V1Secret{
+								Payload: &models.SecretsV1SecretsGetResponse{
+									Result: &models.SecretsV1Secret{
 										Description: &testDescription,
 										ID:          &testSecretID,
 										Name:        &testSecretID,
-										Metadata: &models.V1ObjectMeta{
+										Metadata: &models.MetaV1ObjectMeta{
 											LastModifiedAt: strfmt.DateTime(timeNow),
 										},
 									},
@@ -711,12 +711,12 @@ func TestObserve(t *testing.T) {
 								Context:  context.Background(),
 							}).
 							Return(&secrets.GetSecretOK{
-								Payload: &models.V1SecretsGetResponse{
-									Result: &models.V1Secret{
+								Payload: &models.SecretsV1SecretsGetResponse{
+									Result: &models.SecretsV1Secret{
 										Description: &testDescription,
 										ID:          &testSecretID,
 										Name:        &testSecretID,
-										Metadata: &models.V1ObjectMeta{
+										Metadata: &models.MetaV1ObjectMeta{
 											LastModifiedAt: strfmt.DateTime(timeNow),
 										},
 									},
@@ -835,7 +835,7 @@ func TestCreate(t *testing.T) {
 					withMockSecret(func(mcs *mocksecret.MockClientService) {
 						upsertSecret := mcs.EXPECT().
 							CreateUpdateSecret(&secrets.CreateUpdateSecretParams{
-								Body: &models.V1SecretsPutRequest{
+								Body: &models.SecretsV1SecretsPutRequest{
 									Description: &testDescription,
 									Name:        &testSecretName,
 									Secret:      &testSecretValue,
@@ -844,7 +844,7 @@ func TestCreate(t *testing.T) {
 								Context:  context.Background(),
 							}).
 							Return(&secrets.CreateUpdateSecretOK{
-								Payload: &models.V1SecretsPutResponse{},
+								Payload: &models.SecretsV1SecretsPutResponse{},
 							}, nil)
 						mcs.EXPECT().
 							GetSecret(&secrets.GetSecretParams{
@@ -852,12 +852,12 @@ func TestCreate(t *testing.T) {
 								Context:  context.Background(),
 							}).
 							Return(&secrets.GetSecretOK{
-								Payload: &models.V1SecretsGetResponse{
-									Result: &models.V1Secret{
+								Payload: &models.SecretsV1SecretsGetResponse{
+									Result: &models.SecretsV1Secret{
 										Description: &testDescription,
 										ID:          &testSecretID,
 										Name:        &testSecretID,
-										Metadata: &models.V1ObjectMeta{
+										Metadata: &models.MetaV1ObjectMeta{
 											LastModifiedAt: strfmt.DateTime(timeNow),
 										},
 									},
@@ -929,7 +929,7 @@ func TestCreate(t *testing.T) {
 					withMockSecret(func(mcs *mocksecret.MockClientService) {
 						mcs.EXPECT().
 							CreateUpdateSecret(&secrets.CreateUpdateSecretParams{
-								Body: &models.V1SecretsPutRequest{
+								Body: &models.SecretsV1SecretsPutRequest{
 									Description: &testDescription,
 									Name:        &testSecretName,
 									Secret:      &testSecretValue,
@@ -1074,7 +1074,7 @@ func TestCreate(t *testing.T) {
 					withMockSecret(func(mcs *mocksecret.MockClientService) {
 						upsertSecret := mcs.EXPECT().
 							CreateUpdateSecret(&secrets.CreateUpdateSecretParams{
-								Body: &models.V1SecretsPutRequest{
+								Body: &models.SecretsV1SecretsPutRequest{
 									Description: &testDescription,
 									Name:        &testSecretName,
 									Secret:      &testSecretValue,
@@ -1083,7 +1083,7 @@ func TestCreate(t *testing.T) {
 								Context:  context.Background(),
 							}).
 							Return(&secrets.CreateUpdateSecretOK{
-								Payload: &models.V1SecretsPutResponse{},
+								Payload: &models.SecretsV1SecretsPutResponse{},
 							}, nil)
 						mcs.EXPECT().
 							GetSecret(&secrets.GetSecretParams{
@@ -1091,12 +1091,12 @@ func TestCreate(t *testing.T) {
 								Context:  context.Background(),
 							}).
 							Return(&secrets.GetSecretOK{
-								Payload: &models.V1SecretsGetResponse{
-									Result: &models.V1Secret{
+								Payload: &models.SecretsV1SecretsGetResponse{
+									Result: &models.SecretsV1Secret{
 										Description: &testDescription,
 										ID:          &testSecretID,
 										Name:        &testSecretID,
-										Metadata: &models.V1ObjectMeta{
+										Metadata: &models.MetaV1ObjectMeta{
 											LastModifiedAt: strfmt.DateTime(timeNow),
 										},
 									},
@@ -1216,7 +1216,7 @@ func TestUpdate(t *testing.T) {
 					withMockSecret(func(mcs *mocksecret.MockClientService) {
 						upsertSecret := mcs.EXPECT().
 							CreateUpdateSecret(&secrets.CreateUpdateSecretParams{
-								Body: &models.V1SecretsPutRequest{
+								Body: &models.SecretsV1SecretsPutRequest{
 									Description: &testDescription,
 									Name:        &testSecretName,
 									Secret:      &testSecretValue,
@@ -1225,7 +1225,7 @@ func TestUpdate(t *testing.T) {
 								Context:  context.Background(),
 							}).
 							Return(&secrets.CreateUpdateSecretOK{
-								Payload: &models.V1SecretsPutResponse{},
+								Payload: &models.SecretsV1SecretsPutResponse{},
 							}, nil)
 						mcs.EXPECT().
 							GetSecret(&secrets.GetSecretParams{
@@ -1233,12 +1233,12 @@ func TestUpdate(t *testing.T) {
 								Context:  context.Background(),
 							}).
 							Return(&secrets.GetSecretOK{
-								Payload: &models.V1SecretsGetResponse{
-									Result: &models.V1Secret{
+								Payload: &models.SecretsV1SecretsGetResponse{
+									Result: &models.SecretsV1Secret{
 										Description: &testDescription,
 										ID:          &testSecretID,
 										Name:        &testSecretID,
-										Metadata: &models.V1ObjectMeta{
+										Metadata: &models.MetaV1ObjectMeta{
 											LastModifiedAt: strfmt.DateTime(timeNow),
 										},
 									},
@@ -1310,7 +1310,7 @@ func TestUpdate(t *testing.T) {
 					withMockSecret(func(mcs *mocksecret.MockClientService) {
 						mcs.EXPECT().
 							CreateUpdateSecret(&secrets.CreateUpdateSecretParams{
-								Body: &models.V1SecretsPutRequest{
+								Body: &models.SecretsV1SecretsPutRequest{
 									Description: &testDescription,
 									Name:        &testSecretName,
 									Secret:      &testSecretValue,
@@ -1457,7 +1457,7 @@ func TestUpdate(t *testing.T) {
 					withMockSecret(func(mcs *mocksecret.MockClientService) {
 						upsertSecret := mcs.EXPECT().
 							CreateUpdateSecret(&secrets.CreateUpdateSecretParams{
-								Body: &models.V1SecretsPutRequest{
+								Body: &models.SecretsV1SecretsPutRequest{
 									Description: &testDescription,
 									Name:        &testSecretName,
 									Secret:      &testSecretValue,
@@ -1466,7 +1466,7 @@ func TestUpdate(t *testing.T) {
 								Context:  context.Background(),
 							}).
 							Return(&secrets.CreateUpdateSecretOK{
-								Payload: &models.V1SecretsPutResponse{},
+								Payload: &models.SecretsV1SecretsPutResponse{},
 							}, nil)
 						mcs.EXPECT().
 							GetSecret(&secrets.GetSecretParams{
@@ -1474,12 +1474,12 @@ func TestUpdate(t *testing.T) {
 								Context:  context.Background(),
 							}).
 							Return(&secrets.GetSecretOK{
-								Payload: &models.V1SecretsGetResponse{
-									Result: &models.V1Secret{
+								Payload: &models.SecretsV1SecretsGetResponse{
+									Result: &models.SecretsV1Secret{
 										Description: &testDescription,
 										ID:          &testSecretID,
 										Name:        &testSecretID,
-										Metadata: &models.V1ObjectMeta{
+										Metadata: &models.MetaV1ObjectMeta{
 											LastModifiedAt: strfmt.DateTime(timeNow),
 										},
 									},

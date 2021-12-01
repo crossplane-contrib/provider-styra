@@ -1,0 +1,12 @@
+apiVersion: styra.crossplane.io/v1alpha1
+kind: DataSource
+metadata:
+  name: example-kubernetes-resources
+spec:
+  forProvider:
+    category: kubernetes/resources
+    type: pull
+    onPremises: true
+    kubernetesResources: {}
+  providerConfigRef:
+    name: styra-provider

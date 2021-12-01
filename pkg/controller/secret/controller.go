@@ -356,7 +356,7 @@ func (e *external) upsertSecret(ctx context.Context, cr *v1alpha1.Secret, secret
 	req := &secrets.CreateUpdateSecretParams{
 		Context:  ctx,
 		SecretID: meta.GetExternalName(cr),
-		Body: &models.V1SecretsPutRequest{
+		Body: &models.SecretsV1SecretsPutRequest{
 			Description: &cr.Spec.ForProvider.Description,
 			Name:        &cr.Spec.ForProvider.Name,
 			Secret:      &secretValue,
