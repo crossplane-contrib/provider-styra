@@ -1,0 +1,13 @@
+apiVersion: styra.crossplane.io/v1alpha1
+kind: DataSource
+metadata:
+  name: example-git-content
+spec:
+  forProvider:
+    category: git/content
+    type: pull
+    onPremises: false
+    gitContent:
+      url: example-git-repo
+  providerConfigRef:
+    name: styra-provider

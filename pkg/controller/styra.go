@@ -23,6 +23,7 @@ import (
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
 
 	"github.com/crossplane-contrib/provider-styra/pkg/controller/config"
+	"github.com/crossplane-contrib/provider-styra/pkg/controller/datasource"
 	"github.com/crossplane-contrib/provider-styra/pkg/controller/secret"
 	"github.com/crossplane-contrib/provider-styra/pkg/controller/stack"
 	"github.com/crossplane-contrib/provider-styra/pkg/controller/system"
@@ -36,6 +37,7 @@ func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
 		secret.SetupSecret,
 		system.SetupSystem,
 		stack.SetupStack,
+		datasource.SetupDataSource,
 	} {
 		if err := setup(mgr, l, rl); err != nil {
 			return err

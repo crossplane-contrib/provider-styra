@@ -151,13 +151,13 @@ func TestObserve(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&stacks.GetStackOK{
-								Payload: &models.V1StacksGetResponse{
-									Result: &models.V1StackConfig{
+								Payload: &models.StacksV1StacksGetResponse{
+									Result: &models.StacksV1StackConfig{
 										Description: &testDescription,
 										ReadOnly:    styraclient.Bool(true),
 										Type:        &testType,
-										SourceControl: &models.V1SourceControlConfig{
-											Origin: &models.V1GitRepoConfig{
+										SourceControl: &models.StacksV1SourceControlConfig{
+											Origin: &models.GitV1GitRepoConfig{
 												Credentials: &testCredentials,
 												Path:        &testPath,
 												Reference:   &testReference,
@@ -175,7 +175,7 @@ func TestObserve(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&policies.GetPolicyOK{
-								Payload: &models.V1PolicyGetResponse{
+								Payload: &models.PoliciesV1PolicyGetResponse{
 									Result: map[string]interface{}{
 										"modules": map[string]interface{}{
 											"selector.rego": testSelectorRego,
@@ -252,13 +252,13 @@ func TestObserve(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&stacks.GetStackOK{
-								Payload: &models.V1StacksGetResponse{
-									Result: &models.V1StackConfig{
+								Payload: &models.StacksV1StacksGetResponse{
+									Result: &models.StacksV1StackConfig{
 										Description: &testDescription,
 										ReadOnly:    styraclient.Bool(true),
 										Type:        &testType,
-										SourceControl: &models.V1SourceControlConfig{
-											Origin: &models.V1GitRepoConfig{
+										SourceControl: &models.StacksV1SourceControlConfig{
+											Origin: &models.GitV1GitRepoConfig{
 												Credentials: &testCredentials,
 												Path:        &testPath,
 												Reference:   &testReference,
@@ -276,7 +276,7 @@ func TestObserve(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&policies.GetPolicyOK{
-								Payload: &models.V1PolicyGetResponse{
+								Payload: &models.PoliciesV1PolicyGetResponse{
 									Result: map[string]interface{}{
 										"modules": map[string]interface{}{
 											"selector.rego": testSelectorRego,
@@ -346,8 +346,8 @@ func TestObserve(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&stacks.GetStackOK{
-								Payload: &models.V1StacksGetResponse{
-									Result: &models.V1StackConfig{
+								Payload: &models.StacksV1StacksGetResponse{
+									Result: &models.StacksV1StackConfig{
 										Description: &testDescription,
 										ReadOnly:    styraclient.Bool(true),
 										Type:        &testType,
@@ -362,7 +362,7 @@ func TestObserve(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&policies.GetPolicyOK{
-								Payload: &models.V1PolicyGetResponse{
+								Payload: &models.PoliciesV1PolicyGetResponse{
 									Result: map[string]interface{}{
 										"modules": map[string]interface{}{
 											"selector.rego": testSelectorRego,
@@ -440,8 +440,8 @@ func TestObserve(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&stacks.GetStackOK{
-								Payload: &models.V1StacksGetResponse{
-									Result: &models.V1StackConfig{
+								Payload: &models.StacksV1StacksGetResponse{
+									Result: &models.StacksV1StackConfig{
 										Description: &testDescription,
 										ReadOnly:    styraclient.Bool(true),
 										Type:        &testType,
@@ -516,13 +516,13 @@ func TestCreate(t *testing.T) {
 					Stacks: withMockStack(t, func(mcs *mockstack.MockClientService) {
 						mcs.EXPECT().
 							CreateStack(&stacks.CreateStackParams{
-								Body: &models.V1StacksPostRequest{
+								Body: &models.StacksV1StacksPostRequest{
 									Description: &testDescription,
 									Name:        &testStackName,
 									ReadOnly:    styraclient.Bool(true),
 									Type:        &testType,
-									SourceControl: &models.V1SourceControlConfig{
-										Origin: &models.V1GitRepoConfig{
+									SourceControl: &models.StacksV1SourceControlConfig{
+										Origin: &models.GitV1GitRepoConfig{
 											Credentials: &testCredentials,
 											Path:        &testPath,
 											Reference:   &testReference,
@@ -533,8 +533,8 @@ func TestCreate(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&stacks.CreateStackOK{
-								Payload: &models.V1StacksPostResponse{
-									Result: &models.V1StackConfig{
+								Payload: &models.StacksV1StacksPostResponse{
+									Result: &models.StacksV1StackConfig{
 										ID: &testStackID,
 									},
 								},
@@ -603,7 +603,7 @@ func TestCreate(t *testing.T) {
 					Stacks: withMockStack(t, func(mcs *mockstack.MockClientService) {
 						mcs.EXPECT().
 							CreateStack(&stacks.CreateStackParams{
-								Body: &models.V1StacksPostRequest{
+								Body: &models.StacksV1StacksPostRequest{
 									Name:        &testStackName,
 									Type:        &testType,
 									Description: &testDescription,
@@ -673,13 +673,13 @@ func TestUpdate(t *testing.T) {
 						mcs.EXPECT().
 							UpdateStack(&stacks.UpdateStackParams{
 								Stack: testStackID,
-								Body: &models.V1StacksPutRequest{
+								Body: &models.StacksV1StacksPutRequest{
 									Name:        &testStackName,
 									Description: &testDescription,
 									ReadOnly:    styraclient.Bool(true),
 									Type:        &testType,
-									SourceControl: &models.V1SourceControlConfig{
-										Origin: &models.V1GitRepoConfig{
+									SourceControl: &models.StacksV1SourceControlConfig{
+										Origin: &models.GitV1GitRepoConfig{
 											Credentials: &testCredentials,
 											Path:        &testPath,
 											Reference:   &testReference,
@@ -690,14 +690,14 @@ func TestUpdate(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&stacks.UpdateStackOK{
-								Payload: &models.V1StacksPutResponse{},
+								Payload: &models.StacksV1StacksPutResponse{},
 							}, nil)
 					}),
 					Policies: withMockPolicies(t, func(mcs *mockpolicies.MockClientService) {
 						mcs.EXPECT().
 							UpdatePolicy(&policies.UpdatePolicyParams{
 								Policy: fmt.Sprintf("stacks/%s/selectors", testStackID),
-								Body: &models.V1PoliciesPutRequest{
+								Body: &models.PoliciesV1PoliciesPutRequest{
 									Modules: map[string]string{
 										"selector.rego": testSelectorRego,
 									},
@@ -769,7 +769,7 @@ func TestUpdate(t *testing.T) {
 						mcs.EXPECT().
 							UpdateStack(&stacks.UpdateStackParams{
 								Stack: testStackID,
-								Body: &models.V1StacksPutRequest{
+								Body: &models.StacksV1StacksPutRequest{
 									Name:        &testStackName,
 									Description: &testDescription,
 									ReadOnly:    styraclient.Bool(true),
@@ -810,7 +810,7 @@ func TestUpdate(t *testing.T) {
 						mcs.EXPECT().
 							UpdateStack(&stacks.UpdateStackParams{
 								Stack: testStackID,
-								Body: &models.V1StacksPutRequest{
+								Body: &models.StacksV1StacksPutRequest{
 									Name:        &testStackName,
 									Description: &testDescription,
 									ReadOnly:    styraclient.Bool(true),
@@ -819,14 +819,14 @@ func TestUpdate(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&stacks.UpdateStackOK{
-								Payload: &models.V1StacksPutResponse{},
+								Payload: &models.StacksV1StacksPutResponse{},
 							}, nil)
 					}),
 					Policies: withMockPolicies(t, func(mcs *mockpolicies.MockClientService) {
 						mcs.EXPECT().
 							UpdatePolicy(&policies.UpdatePolicyParams{
 								Policy: fmt.Sprintf("stacks/%s/selectors", testStackID),
-								Body: &models.V1PoliciesPutRequest{
+								Body: &models.PoliciesV1PoliciesPutRequest{
 									Modules: map[string]string{
 										"selector.rego": testSelectorRego,
 									},

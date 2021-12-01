@@ -1,0 +1,12 @@
+apiVersion: styra.crossplane.io/v1alpha1
+kind: DataSource
+metadata:
+  name: example-rest
+spec:
+  forProvider:
+    category: rest
+    type: push
+    onPremises: false
+    rest: {}
+  providerConfigRef:
+    name: styra-provider

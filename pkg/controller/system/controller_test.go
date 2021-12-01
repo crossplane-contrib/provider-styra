@@ -138,10 +138,10 @@ func TestObserve(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&systems.GetSystemOK{
-								Payload: &models.V1SystemsGetResponse{
-									Result: &models.V1SystemConfig{
+								Payload: &models.SystemsV1SystemsGetResponse{
+									Result: &models.SystemsV1SystemConfig{
 										Description:          testDescription,
-										DeploymentParameters: &models.V1SystemDeploymentParameters{},
+										DeploymentParameters: &models.SystemsV1SystemDeploymentParameters{},
 										ReadOnly:             styraclient.Bool(true),
 										Type:                 &testType,
 										ExternalID:           testExternalID,
@@ -166,7 +166,7 @@ func TestObserve(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&policies.GetPolicyOK{
-								Payload: &models.V1PolicyGetResponse{
+								Payload: &models.PoliciesV1PolicyGetResponse{
 									Result: map[string]interface{}{
 										"modules": map[string]interface{}{
 											"labels.rego": testLabelsRego,
@@ -244,10 +244,10 @@ func TestObserve(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&systems.GetSystemOK{
-								Payload: &models.V1SystemsGetResponse{
-									Result: &models.V1SystemConfig{
+								Payload: &models.SystemsV1SystemsGetResponse{
+									Result: &models.SystemsV1SystemConfig{
 										Description:          testDescription,
-										DeploymentParameters: &models.V1SystemDeploymentParameters{},
+										DeploymentParameters: &models.SystemsV1SystemDeploymentParameters{},
 										ReadOnly:             styraclient.Bool(true),
 										Type:                 &testType,
 										ExternalID:           testExternalID,
@@ -272,7 +272,7 @@ func TestObserve(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&policies.GetPolicyOK{
-								Payload: &models.V1PolicyGetResponse{
+								Payload: &models.PoliciesV1PolicyGetResponse{
 									Result: map[string]interface{}{
 										"modules": map[string]interface{}{
 											"labels.rego": testLabelsRego,
@@ -339,10 +339,10 @@ func TestObserve(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&systems.GetSystemOK{
-								Payload: &models.V1SystemsGetResponse{
-									Result: &models.V1SystemConfig{
+								Payload: &models.SystemsV1SystemsGetResponse{
+									Result: &models.SystemsV1SystemConfig{
 										Description:          testDescription,
-										DeploymentParameters: &models.V1SystemDeploymentParameters{},
+										DeploymentParameters: &models.SystemsV1SystemDeploymentParameters{},
 										ReadOnly:             styraclient.Bool(true),
 										Type:                 &testType,
 										ExternalID:           testExternalID,
@@ -367,7 +367,7 @@ func TestObserve(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&policies.GetPolicyOK{
-								Payload: &models.V1PolicyGetResponse{
+								Payload: &models.PoliciesV1PolicyGetResponse{
 									Result: map[string]interface{}{
 										"modules": map[string]interface{}{
 											"labels.rego": testLabelsRego,
@@ -464,10 +464,10 @@ func TestObserve(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&systems.GetSystemOK{
-								Payload: &models.V1SystemsGetResponse{
-									Result: &models.V1SystemConfig{
+								Payload: &models.SystemsV1SystemsGetResponse{
+									Result: &models.SystemsV1SystemConfig{
 										Description:          testDescription,
-										DeploymentParameters: &models.V1SystemDeploymentParameters{},
+										DeploymentParameters: &models.SystemsV1SystemDeploymentParameters{},
 										ReadOnly:             styraclient.Bool(true),
 										Type:                 &testType,
 										ExternalID:           testExternalID,
@@ -523,10 +523,10 @@ func TestObserve(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&systems.GetSystemOK{
-								Payload: &models.V1SystemsGetResponse{
-									Result: &models.V1SystemConfig{
+								Payload: &models.SystemsV1SystemsGetResponse{
+									Result: &models.SystemsV1SystemConfig{
 										Description:          testDescription,
-										DeploymentParameters: &models.V1SystemDeploymentParameters{},
+										DeploymentParameters: &models.SystemsV1SystemDeploymentParameters{},
 										ReadOnly:             styraclient.Bool(true),
 										Type:                 &testType,
 										ExternalID:           testExternalID,
@@ -548,7 +548,7 @@ func TestObserve(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&policies.GetPolicyOK{
-								Payload: &models.V1PolicyGetResponse{
+								Payload: &models.PoliciesV1PolicyGetResponse{
 									Result: map[string]interface{}{
 										"modules": map[string]interface{}{
 											"labels.rego": testLabelsRego,
@@ -648,9 +648,9 @@ func TestCreate(t *testing.T) {
 					Systems: withMockSystem(t, func(mcs *mocksystem.MockClientService) {
 						mcs.EXPECT().
 							CreateSystem(&systems.CreateSystemParams{
-								Body: &models.V1SystemsPostRequest{
+								Body: &models.SystemsV1SystemsPostRequest{
 									Description: testDescription,
-									DeploymentParameters: &models.V1SystemDeploymentParameters{
+									DeploymentParameters: &models.SystemsV1SystemDeploymentParameters{
 										DenyOnOpaFail: styraclient.Bool(true),
 									},
 									Name:       &testSystemName,
@@ -661,9 +661,9 @@ func TestCreate(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&systems.CreateSystemOK{
-								Payload: &models.V1SystemsPostResponse{
-									Result: &models.V1SystemConfig{
-										ID: testSystemID,
+								Payload: &models.SystemsV1SystemsPostResponse{
+									Result: &models.SystemsV1SystemConfig{
+										ID: &testSystemID,
 									},
 								},
 							}, nil)
@@ -731,7 +731,7 @@ func TestCreate(t *testing.T) {
 					Systems: withMockSystem(t, func(mcs *mocksystem.MockClientService) {
 						mcs.EXPECT().
 							CreateSystem(&systems.CreateSystemParams{
-								Body: &models.V1SystemsPostRequest{
+								Body: &models.SystemsV1SystemsPostRequest{
 									Name: &testSystemName,
 									Type: &testType,
 								},
@@ -795,9 +795,9 @@ func TestUpdate(t *testing.T) {
 						mcs.EXPECT().
 							UpdateSystem(&systems.UpdateSystemParams{
 								System: testSystemID,
-								Body: &models.V1SystemsPutRequest{
+								Body: &models.SystemsV1SystemsPutRequest{
 									Description: testDescription,
-									DeploymentParameters: &models.V1SystemDeploymentParameters{
+									DeploymentParameters: &models.SystemsV1SystemDeploymentParameters{
 										DenyOnOpaFail: styraclient.Bool(true),
 									},
 									Name:       &testSystemName,
@@ -808,8 +808,8 @@ func TestUpdate(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&systems.UpdateSystemOK{
-								Payload: &models.V1SystemsPutResponse{
-									Result: &models.V1SystemConfig{},
+								Payload: &models.SystemsV1SystemsPutResponse{
+									Result: &models.SystemsV1SystemConfig{},
 								},
 							}, nil)
 					}),
@@ -817,7 +817,7 @@ func TestUpdate(t *testing.T) {
 						mcs.EXPECT().
 							UpdatePolicy(&policies.UpdatePolicyParams{
 								Policy: fmt.Sprintf("metadata/%s/labels", testSystemID),
-								Body: &models.V1PoliciesPutRequest{
+								Body: &models.PoliciesV1PoliciesPutRequest{
 									Modules: map[string]string{
 										"labels.rego": testLabelsRego,
 									},
@@ -888,7 +888,7 @@ func TestUpdate(t *testing.T) {
 					Systems: withMockSystem(t, func(mcs *mocksystem.MockClientService) {
 						mcs.EXPECT().
 							UpdateSystem(&systems.UpdateSystemParams{
-								Body: &models.V1SystemsPutRequest{
+								Body: &models.SystemsV1SystemsPutRequest{
 									Name: &testSystemName,
 									Type: &testType,
 								},
@@ -921,9 +921,9 @@ func TestUpdate(t *testing.T) {
 						mcs.EXPECT().
 							UpdateSystem(&systems.UpdateSystemParams{
 								System: testSystemID,
-								Body: &models.V1SystemsPutRequest{
+								Body: &models.SystemsV1SystemsPutRequest{
 									Description: testDescription,
-									DeploymentParameters: &models.V1SystemDeploymentParameters{
+									DeploymentParameters: &models.SystemsV1SystemDeploymentParameters{
 										DenyOnOpaFail: styraclient.Bool(true),
 									},
 									Name:       &testSystemName,
@@ -934,8 +934,8 @@ func TestUpdate(t *testing.T) {
 								Context: context.Background(),
 							}).
 							Return(&systems.UpdateSystemOK{
-								Payload: &models.V1SystemsPutResponse{
-									Result: &models.V1SystemConfig{},
+								Payload: &models.SystemsV1SystemsPutResponse{
+									Result: &models.SystemsV1SystemConfig{},
 								},
 							}, nil)
 					}),
@@ -943,7 +943,7 @@ func TestUpdate(t *testing.T) {
 						mcs.EXPECT().
 							UpdatePolicy(&policies.UpdatePolicyParams{
 								Policy: fmt.Sprintf("metadata/%s/labels", testSystemID),
-								Body: &models.V1PoliciesPutRequest{
+								Body: &models.PoliciesV1PoliciesPutRequest{
 									Modules: map[string]string{
 										"labels.rego": testLabelsRego,
 									},
