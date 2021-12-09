@@ -10,6 +10,13 @@ const ForAllStatusCodes = -1
 // Option can be passed to a client call to modify the request
 type Option func(*runtime.ClientOperation)
 
+// DropContentTypeHeader by setting ConsumesMediaTypes to nil because some Styra APIs (i.e. DELETE /v1/secrets/<id>) will fail
+// if a request contains a header Content-Type: application/json but does not provide body by default.
+// NOTE: This effectively sets the header value to runtime.DefaultMediaType.
+func DropContentTypeHeader(rt *runtime.ClientOperation) {
+	rt.ConsumesMediaTypes = nil
+}
+
 // ReturnRawResponse overwrites the default consumer to return the raw response body in bytes
 func ReturnRawResponse(rt *runtime.ClientOperation) {
 	OverwriteConsumer(runtime.ByteStreamConsumer())(rt)
