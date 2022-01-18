@@ -280,7 +280,7 @@ func (e *external) updateSelectors(ctx context.Context, cr *v1alpha1.Stack) erro
 	req := &policies.UpdatePolicyParams{
 		Context: ctx,
 		Policy:  fmt.Sprintf("stacks/%s/selectors", meta.GetExternalName((cr))),
-		Body: &models.V1PoliciesPutRequest{
+		Body: &models.PoliciesV1PoliciesPutRequest{
 			Modules: map[string]string{
 				"selector.rego": rego,
 			},

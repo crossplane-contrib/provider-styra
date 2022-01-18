@@ -20,6 +20,8 @@ limitations under the License.
 
 //go:generate go run -tags generate github.com/golang/mock/mockgen -package resource -destination ./resource/mock.go github.com/crossplane/crossplane-runtime/pkg/resource Applicator
 
+//go:generate go run -tags generate github.com/golang/mock/mockgen -package datasources -destination ./datasources/mock.go github.com/mistermx/styra-go-client/pkg/client/datasources ClientService
+
 //go:generate go run -tags generate github.com/golang/mock/mockgen -package policies -destination ./policies/mock.go github.com/mistermx/styra-go-client/pkg/client/policies ClientService
 
 //go:generate go run -tags generate github.com/golang/mock/mockgen -package secrets -destination ./secrets/mock.go github.com/mistermx/styra-go-client/pkg/client/secrets ClientService

@@ -1,5 +1,10 @@
 package client
 
+import (
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
 // LateInitializeStringPtr returns in if it's non-nil, otherwise returns from
 // which is the backup for the cases in is nil.
 func LateInitializeStringPtr(in *string, from *string) *string {
@@ -52,6 +57,24 @@ func LateInitializeInt32Ptr(in *int32, from *int32) *int32 {
 // LateInitializeBoolPtr returns in if it's non-nil, otherwise returns from
 // which is the backup for the cases in is nil.
 func LateInitializeBoolPtr(in *bool, from *bool) *bool {
+	if in != nil {
+		return in
+	}
+	return from
+}
+
+// LateInitializeDuration returns in if it's non-nil, otherwise returns from
+// which is the backup for the cases in is nil.
+func LateInitializeDuration(in, from *metav1.Duration) *metav1.Duration {
+	if in != nil {
+		return in
+	}
+	return from
+}
+
+// LateInitializeQuantity returns in if it's non-nil, otherwise returns from
+// which is the backup for the cases in is nil.
+func LateInitializeQuantity(in, from *resource.Quantity) *resource.Quantity {
 	if in != nil {
 		return in
 	}

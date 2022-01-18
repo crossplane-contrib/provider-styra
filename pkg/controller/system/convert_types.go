@@ -9,20 +9,20 @@ import (
 )
 
 // generateSystem generates a V1SystemConfig from System
-func generateSystem(resp *models.V1SystemConfig) (cr *v1alpha1.System) { // nolint:gocyclo
+func generateSystem(resp *models.SystemsV1SystemConfig) (cr *v1alpha1.System) { // nolint:gocyclo
 	cr = &v1alpha1.System{}
 
 	if resp.Datasources != nil {
 		cr.Status.AtProvider.Datasources = make([]*v1alpha1.V1DatasourceConfig, len(resp.Datasources))
 		for i, v := range resp.Datasources {
 			n := &v1alpha1.V1DatasourceConfig{}
-			n.ID = v.ID
+			n.ID = styraclient.StringValue(v.ID)
 			n.Optional = v.Optional
-			n.Category = v.Category
-			n.Type = v.Type
+			n.Category = styraclient.StringValue(v.Category)
+			n.Type = styraclient.StringValue(v.Type)
 			if v.Status != nil {
 				n.Status = &v1alpha1.V1Status{
-					AuthzMigration: v.Status.AuthzMigration,
+					// AuthzMigration: v.Status.AuthzMigration,
 				}
 			}
 			cr.Status.AtProvider.Datasources[i] = n
@@ -49,9 +49,9 @@ func generateSystem(resp *models.V1SystemConfig) (cr *v1alpha1.System) { // noli
 	return cr
 }
 
-// generateSystemPostRequest generates models.V1SystemsPostRequest from v1alpha1.System
-func generateSystemPostRequest(cr *v1alpha1.System) *models.V1SystemsPostRequest {
-	return &models.V1SystemsPostRequest{
+// generateSystemPostRequest generates models.SystemsV1SystemsPostRequest from v1alpha1.System
+func generateSystemPostRequest(cr *v1alpha1.System) *models.SystemsV1SystemsPostRequest {
+	return &models.SystemsV1SystemsPostRequest{
 		DeploymentParameters: generateDeploymentParameters(cr.Spec.ForProvider.DeploymentParameters),
 		Description:          styraclient.StringValue(cr.Spec.ForProvider.Description),
 		ExternalID:           styraclient.StringValue(cr.Spec.ForProvider.ExternalID),
@@ -61,9 +61,9 @@ func generateSystemPostRequest(cr *v1alpha1.System) *models.V1SystemsPostRequest
 	}
 }
 
-// generateSystemPutRequest generates models.V1SystemsPutRequest from v1alpha1.System
-func generateSystemPutRequest(cr *v1alpha1.System) *models.V1SystemsPutRequest {
-	return &models.V1SystemsPutRequest{
+// generateSystemPutRequest generates models.SystemsV1SystemsPutRequest from v1alpha1.System
+func generateSystemPutRequest(cr *v1alpha1.System) *models.SystemsV1SystemsPutRequest {
+	return &models.SystemsV1SystemsPutRequest{
 		DeploymentParameters: generateDeploymentParameters(cr.Spec.ForProvider.DeploymentParameters),
 		Description:          styraclient.StringValue(cr.Spec.ForProvider.Description),
 		ExternalID:           styraclient.StringValue(cr.Spec.ForProvider.ExternalID),
@@ -73,9 +73,9 @@ func generateSystemPutRequest(cr *v1alpha1.System) *models.V1SystemsPutRequest {
 	}
 }
 
-func generateDeploymentParameters(spec *v1alpha1.V1SystemDeploymentParameters) *models.V1SystemDeploymentParameters {
+func generateDeploymentParameters(spec *v1alpha1.V1SystemDeploymentParameters) *models.SystemsV1SystemDeploymentParameters {
 	if spec != nil {
-		return &models.V1SystemDeploymentParameters{
+		return &models.SystemsV1SystemDeploymentParameters{
 			DenyOnOpaFail:            spec.DenyOnOpaFail,
 			HTTPProxy:                styraclient.StringValue(spec.HTTPProxy),
 			HTTPSProxy:               styraclient.StringValue(spec.HTTPSProxy),

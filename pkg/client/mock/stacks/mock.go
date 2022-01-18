@@ -115,26 +115,6 @@ func (mr *MockClientServiceMockRecorder) DeleteUserBranchStack(arg0 interface{},
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUserBranchStack", reflect.TypeOf((*MockClientService)(nil).DeleteUserBranchStack), varargs...)
 }
 
-// Func2 mocks base method.
-func (m *MockClientService) Func2(arg0 *stacks.Func2Params, arg1 ...stacks.ClientOption) (*stacks.Func2OK, error) {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0}
-	for _, a := range arg1 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "Func2", varargs...)
-	ret0, _ := ret[0].(*stacks.Func2OK)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Func2 indicates an expected call of Func2.
-func (mr *MockClientServiceMockRecorder) Func2(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0}, arg1...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Func2", reflect.TypeOf((*MockClientService)(nil).Func2), varargs...)
-}
-
 // GetSourceControlFilesBranchStack mocks base method.
 func (m *MockClientService) GetSourceControlFilesBranchStack(arg0 *stacks.GetSourceControlFilesBranchStackParams, arg1 ...stacks.ClientOption) (*stacks.GetSourceControlFilesBranchStackOK, error) {
 	m.ctrl.T.Helper()
@@ -225,6 +205,26 @@ func (m *MockClientService) SetTransport(arg0 runtime.ClientTransport) {
 func (mr *MockClientServiceMockRecorder) SetTransport(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetTransport", reflect.TypeOf((*MockClientService)(nil).SetTransport), arg0)
+}
+
+// SourceControlVerifyConfigStack mocks base method.
+func (m *MockClientService) SourceControlVerifyConfigStack(arg0 *stacks.SourceControlVerifyConfigStackParams, arg1 ...stacks.ClientOption) (*stacks.SourceControlVerifyConfigStackOK, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0}
+	for _, a := range arg1 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SourceControlVerifyConfigStack", varargs...)
+	ret0, _ := ret[0].(*stacks.SourceControlVerifyConfigStackOK)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SourceControlVerifyConfigStack indicates an expected call of SourceControlVerifyConfigStack.
+func (mr *MockClientServiceMockRecorder) SourceControlVerifyConfigStack(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0}, arg1...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SourceControlVerifyConfigStack", reflect.TypeOf((*MockClientService)(nil).SourceControlVerifyConfigStack), varargs...)
 }
 
 // UpdateStack mocks base method.

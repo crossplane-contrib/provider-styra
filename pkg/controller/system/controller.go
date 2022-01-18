@@ -235,7 +235,7 @@ func (e *external) Create(ctx context.Context, mg resource.Managed) (managed.Ext
 		return managed.ExternalCreation{}, errors.Wrap(err, errCreateFailed)
 	}
 
-	meta.SetExternalName(cr, resp.Payload.Result.ID)
+	meta.SetExternalName(cr, styraclient.StringValue(resp.Payload.Result.ID))
 
 	// Do not create/update labels and connection details here because an error
 	// will result in a recreation of the system.
@@ -292,7 +292,7 @@ func (e *external) Delete(ctx context.Context, mg resource.Managed) error {
 	return nil
 }
 
-func (e *external) LateInitialize(cr *v1alpha1.System, resp *models.V1SystemConfig) {
+func (e *external) LateInitialize(cr *v1alpha1.System, resp *models.SystemsV1SystemConfig) {
 	system := generateSystem(resp)
 
 	cr.Spec.ForProvider.Description = styraclient.LateInitializeStringPtr(cr.Spec.ForProvider.Description, system.Spec.ForProvider.Description)
@@ -337,7 +337,7 @@ func (e *external) updateLabels(ctx context.Context, cr *v1alpha1.System) error 
 	req := &policies.UpdatePolicyParams{
 		Context: ctx,
 		Policy:  fmt.Sprintf("metadata/%s/labels", meta.GetExternalName((cr))),
-		Body: &models.V1PoliciesPutRequest{
+		Body: &models.PoliciesV1PoliciesPutRequest{
 			Modules: map[string]string{
 				"labels.rego": rego,
 			},
