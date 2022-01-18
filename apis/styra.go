@@ -20,6 +20,7 @@ package apis
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 
+	datasourcev1alpha1 "github.com/crossplane-contrib/provider-styra/apis/datasource/v1alpha1"
 	secretsv1alpha1 "github.com/crossplane-contrib/provider-styra/apis/secret/v1alpha1"
 	stackv1alpha1 "github.com/crossplane-contrib/provider-styra/apis/stack/v1alpha1"
 	systemv1alpha1 "github.com/crossplane-contrib/provider-styra/apis/system/v1alpha1"
@@ -29,10 +30,11 @@ import (
 func init() {
 	// Register the types with the Scheme so the components can map objects to GroupVersionKinds and back
 	AddToSchemes = append(AddToSchemes,
-		secretsv1alpha1.SchemeBuilder.AddToScheme,
+		datasourcev1alpha1.SchemeBuilder.AddToScheme,
 		styrav1alpha1.SchemeBuilder.AddToScheme,
 		systemv1alpha1.SchemeBuilder.AddToScheme,
 		stackv1alpha1.SchemeBuilder.AddToScheme,
+		secretsv1alpha1.SchemeBuilder.AddToScheme,
 	)
 }
 

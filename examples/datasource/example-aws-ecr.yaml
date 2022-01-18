@@ -1,0 +1,14 @@
+apiVersion: styra.crossplane.io/v1alpha1
+kind: DataSource
+metadata:
+  name: example-aws-ecr
+spec:
+  forProvider:
+    category: aws/ecr
+    type: pull
+    onPremises: false
+    awsECR:
+      credentials: "example-secret"
+      region: us-west-1
+  providerConfigRef:
+    name: styra-provider

@@ -1,5 +1,10 @@
 package client
 
+import (
+	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
+
 // String returns a pointer to the string value passed in.
 func String(v string) *string {
 	return &v
@@ -824,4 +829,32 @@ func Float64ValueMap(src map[string]*float64) map[string]float64 {
 		}
 	}
 	return dst
+}
+
+// Float64ToQuantity converts a float64 to a Quantity
+// NOTE: Only the first four decimal points will be used.
+func Float64ToQuantity(f *float64) *resource.Quantity {
+	if f == nil {
+		return nil
+	}
+
+	milli := int64(*f * 1000)
+	return resource.NewMilliQuantity(milli, resource.DecimalSI)
+}
+
+// QuantityToFloat64Ptr converts a Quantity to a float64.
+func QuantityToFloat64Ptr(q *resource.Quantity) *float64 {
+	if q == nil {
+		return nil
+	}
+	approx := q.AsApproximateFloat64()
+	return &approx
+}
+
+// DurationToString converts a duration to a string
+func DurationToString(d *metav1.Duration) *string {
+	if d == nil {
+		return nil
+	}
+	return String(d.Duration.String())
 }

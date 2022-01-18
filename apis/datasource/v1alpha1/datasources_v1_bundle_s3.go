@@ -1,0 +1,35 @@
+/*
+Copyright 2021 The Crossplane Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+package v1alpha1
+
+// DatasourcesV1BundleS3 defines properties specific to bundle/s3 datasources
+type DatasourcesV1BundleS3 struct {
+	DatasourcesV1Poller `json:",inline"`
+
+	DatasourcesV1AWSCommon `json:",inline"`
+
+	// S3 Bucket
+	// +kubebuilder:validation:Required
+	Bucket string `json:"bucket"`
+
+	// Endpoint to S3 storage
+	Endpoint *string `json:"endpoint,omitempty"`
+
+	// S3 Path within a Bucket
+	// +kubebuilder:validation:Required
+	Path string `json:"path"`
+}

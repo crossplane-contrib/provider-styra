@@ -1,0 +1,13 @@
+apiVersion: styra.crossplane.io/v1alpha1
+kind: DataSource
+metadata:
+  name: example-git-rego
+spec:
+  forProvider:
+    category: git/rego
+    type: pull
+    onPremises: false
+    gitRego:
+      url: example-git-repo
+  providerConfigRef:
+    name: styra-provider

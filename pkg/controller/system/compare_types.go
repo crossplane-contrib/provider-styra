@@ -7,7 +7,7 @@ import (
 	styraclient "github.com/crossplane-contrib/provider-styra/pkg/client"
 )
 
-func isEqualSystemDeploymentParameters(spec *v1alpha1.V1SystemDeploymentParameters, current *models.V1SystemDeploymentParameters) bool { // nolint:gocyclo
+func isEqualSystemDeploymentParameters(spec *v1alpha1.V1SystemDeploymentParameters, current *models.SystemsV1SystemDeploymentParameters) bool { // nolint:gocyclo
 	if spec == nil {
 		return current == nil
 	}

@@ -7,7 +7,7 @@ import (
 	styraclient "github.com/crossplane-contrib/provider-styra/pkg/client"
 )
 
-func isEqualSourceControlConfig(spec *v1alpha1.V1SourceControlConfig, current *models.V1SourceControlConfig) bool {
+func isEqualSourceControlConfig(spec *v1alpha1.V1SourceControlConfig, current *models.StacksV1SourceControlConfig) bool {
 	if spec == nil {
 		return current == nil
 	}
