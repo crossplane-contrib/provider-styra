@@ -1,6 +1,6 @@
 package client
 
-// IsEqualString determinetes if StringValue's of two pointers are equal.
+// IsEqualString determines if StringValue's of two pointers are equal.
 func IsEqualString(s1 *string, s2 *string) bool {
 	return StringValue(s1) == StringValue(s2)
 }
@@ -26,12 +26,12 @@ func IsEqualStringArrayContent(a1 []string, a2 []string) bool {
 	return true
 }
 
-// IsEqualBool determinetes if BoolValue's of two pointers are equal.
+// IsEqualBool determines if BoolValue's of two pointers are equal.
 func IsEqualBool(b1 *bool, b2 *bool) bool {
 	return BoolValue(b1) == BoolValue(b2)
 }
 
-// IsEqualInt64 determinetes if Int64Value's of two pointers are equal.
+// IsEqualInt64 determines if Int64Value's of two pointers are equal.
 func IsEqualInt64(i1 *int64, i2 *int64) bool {
 	return Int64Value(i1) == Int64Value(i2)
 }
