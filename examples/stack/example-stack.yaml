@@ -4,8 +4,8 @@ metadata:
   name: example-stack
 spec:
   forProvider:
-    description: "This is a description"
     readOnly: true
+    description: "This is a description"
     type: kubernetes:v2
   providerConfigRef:
     name: styra-provider
