@@ -4,7 +4,6 @@ metadata:
   name: example-system
 spec:
   forProvider:
-    name: example-system
     description: "Hello world"
     type: kubernetes:v2
   providerConfigRef:
