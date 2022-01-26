@@ -7,7 +7,7 @@ spec:
   basepath: '/'
   credentials:
     secretRef:
-      key: credentials
+      key: token
       name: styra-provider-creds
       namespace: crossplane-system
     source: Secret
@@ -16,6 +16,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: styra-provider-creds
+  namespace: crossplane-system
 type: Opaque
 data:
   token: <token>
