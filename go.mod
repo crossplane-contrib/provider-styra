@@ -13,6 +13,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/google/go-cmp v0.5.6
 	github.com/huandu/xstrings v1.3.2 // indirect
+	github.com/iancoleman/strcase v0.2.0
 	github.com/mistermx/styra-go-client v0.0.0-20220114135530-453ab0eb2462
 	github.com/mitchellh/copystructure v1.1.2 // indirect
 	github.com/open-policy-agent/opa v0.27.1

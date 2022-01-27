@@ -20,11 +20,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 	"github.com/google/go-cmp/cmp"
+	"github.com/iancoleman/strcase"
 
 	"github.com/pkg/errors"
 	"k8s.io/client-go/util/workqueue"
@@ -50,17 +50,14 @@ import (
 )
 
 const (
-	helmValuesAssetType            = "helm-values"
-	helmValuesConnectionDetailsKey = "helmValues"
-
 	errNotSystem                = "managed resource is not an system custom resource"
 	errUpdateFailed             = "cannot update system"
 	errCreateFailed             = "cannot create system"
 	errDeleteFailed             = "cannot delete system"
 	errDescribeFailed           = "cannot describe system"
 	errGetConnectionDetails     = "cannot get connection details"
+	errGetAsset                 = "cannot get asset"
 	errIsUpToDateFailed         = "isUpToDate failed"
-	errGetHelmValues            = "cannot get helm chart values"
 	errGetLabels                = "cannot get system labels"
 	errGetLabelsInvalidResponse = "get system labels returned an unexpected response"
 	errCompareLabels            = "cannot compare labels"
@@ -178,6 +175,10 @@ func (e *external) isUpToDate(ctx context.Context, cr *v1alpha1.System, resp *sy
 }
 
 func (e *external) areLabelsUpToDate(ctx context.Context, cr *v1alpha1.System) (bool, error) {
+	if !cr.Spec.ForProvider.HasLabels() {
+		return true, nil
+	}
+
 	req := &policies.GetPolicyParams{
 		Context: ctx,
 		Policy:  fmt.Sprintf("metadata/%s/labels", meta.GetExternalName((cr))),
@@ -302,30 +303,40 @@ func (e *external) LateInitialize(cr *v1alpha1.System, resp *models.SystemsV1Sys
 }
 
 func (e *external) GetConnectionDetails(ctx context.Context, cr *v1alpha1.System) (managed.ConnectionDetails, error) {
-	if strings.HasPrefix(cr.Spec.ForProvider.Type, "kubernetes") {
-		return e.getConnectionDetailsKubernetes(ctx, cr)
+	if !cr.Spec.ForProvider.HasAssets() {
+		return nil, nil
 	}
 
-	// Only kubernetes systems do provide helm assets which are the only one supported currently.
-	return nil, nil
+	details := managed.ConnectionDetails{}
+
+	for _, assetType := range cr.Spec.ForProvider.GetAssetTypes() {
+		resp, err := e.getAsset(ctx, cr, assetType)
+
+		if err != nil {
+			return nil, errors.Wrapf(err, "cannot get %s", assetType)
+		}
+
+		key := strcase.ToLowerCamel(assetType)
+		details[key] = resp
+	}
+
+	return details, nil
 }
 
-func (e *external) getConnectionDetailsKubernetes(ctx context.Context, cr *v1alpha1.System) (managed.ConnectionDetails, error) {
+func (e *external) getAsset(ctx context.Context, cr *v1alpha1.System, at string) ([]byte, error) {
 	req := &systems.GetAssetParams{
 		Context:   ctx,
 		System:    meta.GetExternalName(cr),
-		Assettype: helmValuesAssetType,
+		Assettype: at,
 	}
 
 	buffer := bytes.Buffer{}
 	_, err := e.client.Systems.GetAsset(req, &buffer, styraclient.ReturnRawResponse)
 	if err != nil {
-		return nil, errors.Wrap(err, errGetHelmValues)
+		return nil, errors.Wrap(err, errGetAsset)
 	}
 
-	return managed.ConnectionDetails{
-		helmValuesConnectionDetailsKey: buffer.Bytes(),
-	}, nil
+	return buffer.Bytes(), nil
 }
 
 func (e *external) updateLabels(ctx context.Context, cr *v1alpha1.System) error {

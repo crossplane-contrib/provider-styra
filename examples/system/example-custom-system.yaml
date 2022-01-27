@@ -1,0 +1,13 @@
+apiVersion: styra.crossplane.io/v1alpha1
+kind: System
+metadata:
+  name: example-system
+spec:
+  forProvider:
+    description: "Hello world"
+    type: custom
+  providerConfigRef:
+    name: styra-provider
+  writeConnectionSecretToRef: # optional
+    namespace: crossplane-system
+    name: connection-details
