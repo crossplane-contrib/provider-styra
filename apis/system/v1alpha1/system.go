@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"strings"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
@@ -96,4 +98,27 @@ type SystemList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 	Items           []System `json:"items"`
+}
+
+// HasLabels whether the system has labels
+func (in *SystemParameters) HasLabels() bool {
+	// so far only handle labels for kubernetes*
+	return in.Type == "kubernetes:v2"
+}
+
+// GetAssetTypes gets available asset types
+func (in *SystemParameters) GetAssetTypes() []string {
+	switch {
+	case strings.HasPrefix(in.Type, "kubernetes"):
+		return []string{"helm-values"}
+	case in.Type == "custom":
+		return []string{"opa-config"}
+	}
+
+	return []string{}
+}
+
+// HasAssets whether the system has available assets
+func (in *SystemParameters) HasAssets() bool {
+	return len(in.GetAssetTypes()) > 0
 }

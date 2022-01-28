@@ -46,6 +46,11 @@ import (
 var (
 	errBoom = errors.New("boom")
 
+	helmValuesAssetType            = "helm-values"
+	helmValuesConnectionDetailsKey = "helmValues"
+
+	kubernetesV2Type = "kubernetes:v2"
+
 	testSystemID    = "testsystem"
 	testSystemName  = "testname"
 	testType        = "kubernetes:test"
@@ -59,7 +64,7 @@ package metadata.testsystem.labels
 
 labels := {
     "foo": "bar",
-    "system-type": "kubernetes:test",
+    "system-type": "%s",
 }
 `
 )
@@ -159,22 +164,6 @@ func TestObserve(t *testing.T) {
 								return nil, nil
 							})
 					}),
-					Policies: withMockPolicies(t, func(mcs *mockpolicies.MockClientService) {
-						mcs.EXPECT().
-							GetPolicy(&policies.GetPolicyParams{
-								Policy:  fmt.Sprintf("metadata/%s/labels", testSystemID),
-								Context: context.Background(),
-							}).
-							Return(&policies.GetPolicyOK{
-								Payload: &models.PoliciesV1PolicyGetResponse{
-									Result: map[string]interface{}{
-										"modules": map[string]interface{}{
-											"labels.rego": testLabelsRego,
-										},
-									},
-								},
-							}, nil)
-					}),
 				},
 				cr: System(
 					withExternalName(testSystemID),
@@ -265,22 +254,6 @@ func TestObserve(t *testing.T) {
 								return nil, nil
 							})
 					}),
-					Policies: withMockPolicies(t, func(mcs *mockpolicies.MockClientService) {
-						mcs.EXPECT().
-							GetPolicy(&policies.GetPolicyParams{
-								Policy:  fmt.Sprintf("metadata/%s/labels", testSystemID),
-								Context: context.Background(),
-							}).
-							Return(&policies.GetPolicyOK{
-								Payload: &models.PoliciesV1PolicyGetResponse{
-									Result: map[string]interface{}{
-										"modules": map[string]interface{}{
-											"labels.rego": testLabelsRego,
-										},
-									},
-								},
-							}, nil)
-					}),
 				},
 				cr: System(
 					withExternalName(testSystemID),
@@ -344,7 +317,7 @@ func TestObserve(t *testing.T) {
 										Description:          testDescription,
 										DeploymentParameters: &models.SystemsV1SystemDeploymentParameters{},
 										ReadOnly:             styraclient.Bool(true),
-										Type:                 &testType,
+										Type:                 &kubernetesV2Type,
 										ExternalID:           testExternalID,
 									},
 								},
@@ -370,7 +343,7 @@ func TestObserve(t *testing.T) {
 								Payload: &models.PoliciesV1PolicyGetResponse{
 									Result: map[string]interface{}{
 										"modules": map[string]interface{}{
-											"labels.rego": testLabelsRego,
+											"labels.rego": fmt.Sprintf(testLabelsRego, kubernetesV2Type),
 										},
 									},
 								},
@@ -394,7 +367,7 @@ func TestObserve(t *testing.T) {
 							TrustedContainerRegistry: styraclient.String(""),
 						},
 						ReadOnly:   styraclient.Bool(true),
-						Type:       testType,
+						Type:       kubernetesV2Type,
 						ExternalID: &testExternalID,
 					}),
 				),
@@ -416,7 +389,7 @@ func TestObserve(t *testing.T) {
 							TrustedContainerRegistry: styraclient.String(""),
 						},
 						ReadOnly:   styraclient.Bool(true),
-						Type:       testType,
+						Type:       kubernetesV2Type,
 						ExternalID: &testExternalID,
 					}),
 					withExternalName(testSystemID),
@@ -469,7 +442,7 @@ func TestObserve(t *testing.T) {
 										Description:          testDescription,
 										DeploymentParameters: &models.SystemsV1SystemDeploymentParameters{},
 										ReadOnly:             styraclient.Bool(true),
-										Type:                 &testType,
+										Type:                 &kubernetesV2Type,
 										ExternalID:           testExternalID,
 									},
 								},
@@ -487,7 +460,7 @@ func TestObserve(t *testing.T) {
 				cr: System(
 					withExternalName(testSystemID),
 					withSpec(v1alpha1.SystemParameters{
-						Type: testType,
+						Type: kubernetesV2Type,
 					}),
 				),
 			},
@@ -506,7 +479,7 @@ func TestObserve(t *testing.T) {
 							TrustedContainerRegistry: styraclient.String(""),
 						},
 						ReadOnly:   styraclient.Bool(true),
-						Type:       testType,
+						Type:       kubernetesV2Type,
 						ExternalID: &testExternalID,
 					}),
 				),
@@ -540,22 +513,6 @@ func TestObserve(t *testing.T) {
 								Context:   context.Background(),
 							}, &bytes.Buffer{}, gomock.Any()).
 							Return(nil, errBoom)
-					}),
-					Policies: withMockPolicies(t, func(mcs *mockpolicies.MockClientService) {
-						mcs.EXPECT().
-							GetPolicy(&policies.GetPolicyParams{
-								Policy:  fmt.Sprintf("metadata/%s/labels", testSystemID),
-								Context: context.Background(),
-							}).
-							Return(&policies.GetPolicyOK{
-								Payload: &models.PoliciesV1PolicyGetResponse{
-									Result: map[string]interface{}{
-										"modules": map[string]interface{}{
-											"labels.rego": testLabelsRego,
-										},
-									},
-								},
-							}, nil)
 					}),
 				},
 				cr: System(
@@ -608,7 +565,7 @@ func TestObserve(t *testing.T) {
 					withConditions(xpv1.Available()),
 				),
 				result: managed.ExternalObservation{},
-				err:    errors.Wrap(errors.Wrap(errBoom, errGetHelmValues), errGetConnectionDetails),
+				err:    errors.Wrap(errors.Wrap(errors.Wrap(errBoom, errGetAsset), "cannot get helm-values"), errGetConnectionDetails),
 			},
 		},
 	}
@@ -819,7 +776,7 @@ func TestUpdate(t *testing.T) {
 								Policy: fmt.Sprintf("metadata/%s/labels", testSystemID),
 								Body: &models.PoliciesV1PoliciesPutRequest{
 									Modules: map[string]string{
-										"labels.rego": testLabelsRego,
+										"labels.rego": fmt.Sprintf(testLabelsRego, testType),
 									},
 								},
 								Context: context.Background(),
@@ -945,7 +902,7 @@ func TestUpdate(t *testing.T) {
 								Policy: fmt.Sprintf("metadata/%s/labels", testSystemID),
 								Body: &models.PoliciesV1PoliciesPutRequest{
 									Modules: map[string]string{
-										"labels.rego": testLabelsRego,
+										"labels.rego": fmt.Sprintf(testLabelsRego, testType),
 									},
 								},
 								Context: context.Background(),
@@ -1095,6 +1052,329 @@ func TestDelete(t *testing.T) {
 				t.Errorf("r: -want, +got:\n%s", diff)
 			}
 			if diff := cmp.Diff(tc.want.cr, tc.args.cr, test.EquateConditions()); diff != "" {
+				t.Errorf("r: -want, +got:\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestAreLabelsUpToDate(t *testing.T) {
+	type want struct {
+		upToDate bool
+		err      error
+	}
+
+	cases := map[string]struct {
+		args
+		want
+	}{
+		"CustomSystem": {
+			args: args{
+				styra: styra.StyraAPI{},
+				cr: System(
+					withExternalName(testSystemID),
+					withSpec(v1alpha1.SystemParameters{
+						Type: "custom",
+					}),
+				),
+			},
+			want: want{
+				true,
+				nil,
+			},
+		},
+		"KubernetesSystem": {
+			args: args{
+				styra: styra.StyraAPI{},
+				cr: System(
+					withExternalName(testSystemID),
+					withSpec(v1alpha1.SystemParameters{
+						Type: "kubernetes",
+					}),
+				),
+			},
+			want: want{
+				true,
+				nil,
+			},
+		},
+		"KubernetesSystemV2UpToDate": {
+			args: args{
+				styra: styra.StyraAPI{
+					Policies: withMockPolicies(t, func(mcs *mockpolicies.MockClientService) {
+						mcs.EXPECT().
+							GetPolicy(&policies.GetPolicyParams{
+								Policy:  fmt.Sprintf("metadata/%s/labels", testSystemID),
+								Context: context.Background(),
+							}).
+							Return(&policies.GetPolicyOK{
+								Payload: &models.PoliciesV1PolicyGetResponse{
+									Result: map[string]interface{}{
+										"modules": map[string]interface{}{
+											"labels.rego": fmt.Sprintf(testLabelsRego, kubernetesV2Type),
+										},
+									},
+								},
+							}, nil)
+					}),
+				},
+				cr: System(
+					withExternalName(testSystemID),
+					withSpec(v1alpha1.SystemParameters{
+						CustomSystemParameters: v1alpha1.CustomSystemParameters{
+							Labels: map[string]string{
+								testLabelKey: testLabelValue,
+							},
+						},
+						Type: kubernetesV2Type,
+					}),
+				),
+			},
+			want: want{
+				true,
+				nil,
+			},
+		},
+		"KubernetesSystemV2NotUpToDate": {
+			args: args{
+				styra: styra.StyraAPI{
+					Policies: withMockPolicies(t, func(mcs *mockpolicies.MockClientService) {
+						mcs.EXPECT().
+							GetPolicy(&policies.GetPolicyParams{
+								Policy:  fmt.Sprintf("metadata/%s/labels", testSystemID),
+								Context: context.Background(),
+							}).
+							Return(&policies.GetPolicyOK{
+								Payload: &models.PoliciesV1PolicyGetResponse{
+									Result: map[string]interface{}{
+										"modules": map[string]interface{}{
+											"labels.rego": fmt.Sprintf(testLabelsRego, "lables-do-not-match"),
+										},
+									},
+								},
+							}, nil)
+					}),
+				},
+				cr: System(
+					withExternalName(testSystemID),
+					withSpec(v1alpha1.SystemParameters{
+						CustomSystemParameters: v1alpha1.CustomSystemParameters{
+							Labels: map[string]string{
+								testLabelKey: testLabelValue,
+							},
+						},
+						Type: kubernetesV2Type,
+					}),
+				),
+			},
+			want: want{
+				false,
+				nil,
+			},
+		},
+		"KubernetesSystemV123": {
+			args: args{
+				styra: styra.StyraAPI{},
+				cr: System(
+					withExternalName(testSystemID),
+					withSpec(v1alpha1.SystemParameters{
+						Type: "kubernetes:v123",
+						CustomSystemParameters: v1alpha1.CustomSystemParameters{
+							Labels: map[string]string{
+								testLabelKey: testLabelValue,
+							},
+						},
+					}),
+				),
+			},
+			want: want{
+				true,
+				nil,
+			},
+		},
+		"UnsupportedSystem": {
+			args: args{
+				styra: styra.StyraAPI{},
+				cr: System(
+					withExternalName(testSystemID),
+					withSpec(v1alpha1.SystemParameters{
+						Type: "fooType",
+					}),
+				),
+			},
+			want: want{
+				true,
+				nil,
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			e := &external{client: &tc.styra}
+			actlUpToDate, err := e.areLabelsUpToDate(context.Background(), tc.args.cr)
+
+			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
+				t.Errorf("r: -want, +got:\n%s", diff)
+			}
+			if diff := cmp.Diff(tc.want.upToDate, actlUpToDate, test.EquateConditions()); diff != "" {
+				t.Errorf("r: -want, +got:\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestGetConnectionDetails(t *testing.T) {
+	type want struct {
+		connDetails managed.ConnectionDetails
+		err         error
+	}
+
+	cases := map[string]struct {
+		args
+		want
+	}{
+		"CustomSystem": {
+			args: args{
+				styra: styra.StyraAPI{
+					Systems: withMockSystem(t, func(mcs *mocksystem.MockClientService) {
+						mcs.EXPECT().
+							GetAsset(&systems.GetAssetParams{
+								Assettype: "opa-config",
+								System:    testSystemID,
+								Context:   context.Background(),
+							}, &bytes.Buffer{}, gomock.Any()).
+							DoAndReturn(func(params *systems.GetAssetParams, writer io.Writer, _ ...systems.ClientOption) (*systems.GetAssetOK, error) {
+								writer.Write([]byte(testAsset))
+								return nil, nil
+							})
+					}),
+				},
+				cr: System(
+					withExternalName(testSystemID),
+					withSpec(v1alpha1.SystemParameters{
+						Type: "custom",
+					}),
+				),
+			},
+			want: want{
+				managed.ConnectionDetails{
+					"opaConfig": {0x74, 0x65, 0x73, 0x74, 0x2d, 0x61, 0x73, 0x73, 0x65, 0x74},
+				},
+				nil,
+			},
+		},
+		"KubernetesSystem": {
+			args: args{
+				styra: styra.StyraAPI{
+					Systems: withMockSystem(t, func(mcs *mocksystem.MockClientService) {
+						mcs.EXPECT().
+							GetAsset(&systems.GetAssetParams{
+								Assettype: helmValuesAssetType,
+								System:    testSystemID,
+								Context:   context.Background(),
+							}, &bytes.Buffer{}, gomock.Any()).
+							DoAndReturn(func(params *systems.GetAssetParams, writer io.Writer, _ ...systems.ClientOption) (*systems.GetAssetOK, error) {
+								writer.Write([]byte(testAsset))
+								return nil, nil
+							})
+					}),
+				},
+				cr: System(
+					withExternalName(testSystemID),
+					withSpec(v1alpha1.SystemParameters{
+						Type: "kubernetes",
+					}),
+				),
+			},
+			want: want{
+				managed.ConnectionDetails{
+					helmValuesConnectionDetailsKey: {0x74, 0x65, 0x73, 0x74, 0x2d, 0x61, 0x73, 0x73, 0x65, 0x74},
+				},
+				nil,
+			},
+		},
+		"KubernetesV2System": {
+			args: args{
+				styra: styra.StyraAPI{
+					Systems: withMockSystem(t, func(mcs *mocksystem.MockClientService) {
+						mcs.EXPECT().
+							GetAsset(&systems.GetAssetParams{
+								Assettype: helmValuesAssetType,
+								System:    testSystemID,
+								Context:   context.Background(),
+							}, &bytes.Buffer{}, gomock.Any()).
+							DoAndReturn(func(params *systems.GetAssetParams, writer io.Writer, _ ...systems.ClientOption) (*systems.GetAssetOK, error) {
+								writer.Write([]byte(testAsset))
+								return nil, nil
+							})
+					}),
+				},
+				cr: System(
+					withExternalName(testSystemID),
+					withSpec(v1alpha1.SystemParameters{
+						Type: kubernetesV2Type,
+					}),
+				),
+			},
+			want: want{
+				managed.ConnectionDetails{
+					helmValuesConnectionDetailsKey: {0x74, 0x65, 0x73, 0x74, 0x2d, 0x61, 0x73, 0x73, 0x65, 0x74},
+				},
+				nil,
+			},
+		},
+		"UnsupportedSystem": {
+			args: args{
+				styra: styra.StyraAPI{},
+				cr: System(
+					withExternalName(testSystemID),
+					withSpec(v1alpha1.SystemParameters{
+						Type: "fooType",
+					}),
+				),
+			},
+			want: want{
+				nil,
+				nil,
+			},
+		},
+		"ErrorGetAsset": {
+			args: args{
+				styra: styra.StyraAPI{
+					Systems: withMockSystem(t, func(mcs *mocksystem.MockClientService) {
+						mcs.EXPECT().
+							GetAsset(&systems.GetAssetParams{
+								Assettype: helmValuesAssetType,
+								System:    testSystemID,
+								Context:   context.Background(),
+							}, &bytes.Buffer{}, gomock.Any()).
+							Return(nil, errBoom)
+					}),
+				},
+				cr: System(
+					withExternalName(testSystemID),
+					withSpec(v1alpha1.SystemParameters{
+						Type: kubernetesV2Type,
+					}),
+				),
+			},
+			want: want{
+				nil,
+				errors.Wrap(errors.Wrap(errBoom, errGetAsset), "cannot get helm-values"),
+			},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			e := &external{client: &tc.styra}
+			actlConnDetails, err := e.GetConnectionDetails(context.Background(), tc.args.cr)
+
+			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
+				t.Errorf("r: -want, +got:\n%s", diff)
+			}
+			if diff := cmp.Diff(tc.want.connDetails, actlConnDetails, test.EquateConditions()); diff != "" {
 				t.Errorf("r: -want, +got:\n%s", diff)
 			}
 		})
