@@ -149,7 +149,7 @@ func generateDataSource(resp *models.DatasourcesV1DatasourcesGetResponseResult) 
 }
 
 func generateDurationFromSeconds(seconds int64) *metav1.Duration {
-	d := (time.Duration)(seconds) * time.Second
+	d := (time.Duration)(seconds) * time.Second //nolint:durationcheck
 	return &metav1.Duration{Duration: d}
 }
 
