@@ -1,6 +1,8 @@
 package system
 
 import (
+	"errors"
+
 	"github.com/mistermx/styra-go-client/pkg/client/systems"
 	"github.com/mistermx/styra-go-client/pkg/models"
 
@@ -115,6 +117,6 @@ func lateInitializeDeploymentParameters(spec *v1alpha1.V1SystemDeploymentParamet
 
 // isNotFound returns whether the given error is of type NotFound or not.
 func isNotFound(err error) bool {
-	_, ok := err.(*systems.GetSystemNotFound)
-	return ok
+	var snf *systems.GetSystemNotFound
+	return errors.As(err, &snf)
 }

@@ -17,11 +17,13 @@ limitations under the License.
 package datasource
 
 import (
+	"errors"
+
 	"github.com/mistermx/styra-go-client/pkg/client/datasources"
 )
 
 // isNotFound returns whether the given error is of type NotFound or not.
 func isNotFound(err error) bool {
-	_, ok := err.(*datasources.GetDatasourceNotFound)
-	return ok
+	var dnf *datasources.GetDatasourceNotFound
+	return errors.As(err, &dnf)
 }

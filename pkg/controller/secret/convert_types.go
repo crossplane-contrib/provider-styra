@@ -19,6 +19,7 @@ package secret
 import (
 	"crypto/sha1" // nolint:gosec
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -73,6 +74,6 @@ func generateSecretChecksum(secretVal string, t time.Time) (string, error) {
 
 // isNotFound returns whether the given error is of type NotFound or not.
 func isNotFound(err error) bool {
-	_, ok := err.(*secrets.GetSecretNotFound)
-	return ok
+	var snf *secrets.GetSecretNotFound
+	return errors.As(err, &snf)
 }

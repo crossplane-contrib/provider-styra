@@ -1,6 +1,8 @@
 package stack
 
 import (
+	"errors"
+
 	"github.com/mistermx/styra-go-client/pkg/client/stacks"
 	"github.com/mistermx/styra-go-client/pkg/models"
 
@@ -70,6 +72,6 @@ func lateInitializeSourceControlConfig(spec, current *v1alpha1.V1SourceControlCo
 
 // IsNotFound returns whether the given error is of type NotFound or not.
 func IsNotFound(err error) bool {
-	_, ok := err.(*stacks.GetStackNotFound)
-	return ok
+	var snf *stacks.GetStackNotFound
+	return errors.As(err, &snf)
 }
