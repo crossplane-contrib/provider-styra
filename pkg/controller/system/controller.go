@@ -19,7 +19,13 @@ package system
 import (
 	"bytes"
 	"context"
+	"crypto/sha1" //nolint:gosec // Not used for security
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/hex"
+	"encoding/pem"
 	"fmt"
+	"time"
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
@@ -27,8 +33,10 @@ import (
 	"github.com/iancoleman/strcase"
 
 	"github.com/pkg/errors"
+	"k8s.io/utils/strings/slices"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/yaml"
 
 	v1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
@@ -59,6 +67,10 @@ const (
 	errGetLabelsInvalidResponse = "get system labels returned an unexpected response"
 	errCompareLabels            = "cannot compare labels"
 	errUpdateLabels             = "cannotUpdateLabels"
+	errMarshalHelmValues        = "cannot re-marshal helm values"
+	errMarshalConnectionDetails = "cannot re-marshal connection details"
+	errExtractCert              = "cannot extract certificate from connection details"
+	errParseCert                = "cannot parse certificate"
 )
 
 // SetupSystem adds a controller that reconciles Systems.
@@ -136,17 +148,35 @@ func (e *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 
 	cr.Status.SetConditions(v1.Available())
 
-	connectionDetails, err := e.GetConnectionDetails(ctx, cr)
+	connectionDetails, err := e.getConnectionDetails(ctx, cr)
 	if err != nil {
 		return managed.ExternalObservation{}, errors.Wrap(err, errGetConnectionDetails)
 	}
-
-	return managed.ExternalObservation{
+	externalObs := managed.ExternalObservation{
 		ResourceExists:          true,
 		ResourceUpToDate:        isUpToDate,
 		ResourceLateInitialized: !cmp.Equal(&cr.Spec.ForProvider, currentSpec),
-		ConnectionDetails:       connectionDetails,
-	}, nil
+	}
+	shouldPublishConnectionDetails, hash, err := shouldPublishConnectionDetails(cr, connectionDetails)
+	if err != nil {
+		return managed.ExternalObservation{}, err
+	}
+	if shouldPublishConnectionDetails {
+		externalObs.ConnectionDetails = connectionDetails
+
+		// Store the expiration timestamp as annotation to determine if it needs
+		// to be updated.
+		cert, err := getCertFromConnectionDetails(cr, connectionDetails)
+		if err != nil {
+			return managed.ExternalObservation{}, errors.Wrap(err, errExtractCert)
+		}
+		if cert != nil {
+			cr.SetLastPublishedConnectionDetailsCertNotAfter(cert.NotAfter)
+		}
+		cr.SetLastPublishedConnectionDetailsHash(hash)
+		externalObs.ResourceLateInitialized = true // Set this to update the hash annotation.
+	}
+	return externalObs, nil
 }
 
 func (e *external) isUpToDate(ctx context.Context, cr *v1alpha1.System, resp *systems.GetSystemOK) (bool, error) { // nolint:gocyclo
@@ -299,7 +329,118 @@ func (e *external) LateInitialize(cr *v1alpha1.System, resp *models.SystemsV1Sys
 	cr.Spec.ForProvider.DeploymentParameters = lateInitializeDeploymentParameters(cr.Spec.ForProvider.DeploymentParameters, system.Spec.ForProvider.DeploymentParameters)
 }
 
-func (e *external) GetConnectionDetails(ctx context.Context, cr *v1alpha1.System) (managed.ConnectionDetails, error) {
+// shouldPublishConnectionDetails determines whether the connection details
+// for cr should be published.
+// Publishing should happen in the following cases:
+//  1. The details change but not the ever-changing values like CACert, Cert and
+//     key that are different evertime the Styra API is called.
+//  2. The Cert has expired.
+//  3. Details have never been published.
+func shouldPublishConnectionDetails(cr *v1alpha1.System, details managed.ConnectionDetails) (bool, string, error) {
+	pruned, err := pruneConnectionDetails(cr, details)
+	if err != nil {
+		return false, "", err
+	}
+	prunedRaw, err := yaml.Marshal(pruned)
+	if err != nil {
+		return false, "", errors.Wrap(err, errMarshalConnectionDetails)
+	}
+	sum := sha1.Sum(prunedRaw) //nolint:gosec
+	hash := hex.EncodeToString(sum[:])
+	lastPublishedHash := cr.GetLastPublishedConnectionDetailsHash()
+	if hash != lastPublishedHash {
+		return true, hash, nil
+	}
+
+	// Check if the last published cert has expired
+	lastPublishedCertNotAfter := cr.GetLastPublishedConnectionDetailsCertNotAfter()
+	return lastPublishedCertNotAfter.Before(time.Now()), lastPublishedHash, nil
+}
+
+func getCertFromConnectionDetails(cr *v1alpha1.System, details managed.ConnectionDetails) (*x509.Certificate, error) {
+	assetTypes := cr.Spec.ForProvider.GetAssetTypes()
+	if slices.Contains(assetTypes, v1alpha1.SystemAssetTypeHelmValues) {
+		key := strcase.ToLowerCamel(v1alpha1.SystemAssetTypeHelmValues)
+		helmValuesRaw, exists := details[key]
+		if !exists {
+			return nil, nil
+		}
+		type helmValuesTyped struct {
+			Opa *struct {
+				Cert *string `json:"Cert,omitempty"`
+			} `json:"opa,omitempty"`
+		}
+		helmValues := helmValuesTyped{}
+		if err := yaml.Unmarshal(helmValuesRaw, &helmValues); err != nil {
+			// Values might not be in the YAML format.
+			// Instead of failing everytime, we should just silently ignore this.
+			return nil, nil //nolint:nilerr
+		}
+		if helmValues.Opa == nil || helmValues.Opa.Cert == nil {
+			return nil, nil
+		}
+		cert, err := parseCertificate(*helmValues.Opa.Cert)
+		return cert, errors.Wrap(err, errParseCert)
+	}
+	// TODO:
+	// case slices.Contains(assetTypes, v1alpha1.SystemAssetTypeOpaConfig):
+	return nil, nil
+}
+
+// parseCertificate from a base64 encoded PEM block.
+func parseCertificate(certPemBase64 string) (*x509.Certificate, error) {
+	certPem, err := base64.StdEncoding.DecodeString(certPemBase64)
+	if err != nil {
+		return nil, err
+	}
+	certRaw, _ := pem.Decode(certPem)
+	return x509.ParseCertificate(certRaw.Bytes)
+}
+
+// pruneConnectionDetails removes all ever-changing fields from the connection
+// details.
+func pruneConnectionDetails(cr *v1alpha1.System, details managed.ConnectionDetails) (managed.ConnectionDetails, error) {
+	prunedDetails := managed.ConnectionDetails{}
+	for k, v := range details {
+		prunedDetails[k] = v
+	}
+
+	assetTypes := cr.Spec.ForProvider.GetAssetTypes()
+	if slices.Contains(assetTypes, v1alpha1.SystemAssetTypeHelmValues) {
+		key := strcase.ToLowerCamel(v1alpha1.SystemAssetTypeHelmValues)
+		helmValuesRaw, exists := details[key]
+		if !exists {
+			return prunedDetails, nil
+		}
+		helmValues := map[string]interface{}{}
+		if err := yaml.Unmarshal(helmValuesRaw, &helmValues); err != nil {
+			// Values might not be in the YAML format.
+			// Instead of failing everytime, we should just silently ignore this.
+			return prunedDetails, nil //nolint:nilerr
+		}
+
+		// Delete properties that are changing on every call to the Styra API
+		// before calculating the hash.
+		if helmValues["opa"] != nil {
+			if opa, ok := helmValues["opa"].(map[string]interface{}); ok {
+				opa["Cert"] = nil
+				opa["CACert"] = nil
+				opa["Key"] = nil
+			}
+		}
+
+		helmValuesRaw, err := yaml.Marshal(helmValues)
+		if err != nil {
+			return nil, errors.Wrap(err, errMarshalHelmValues)
+		}
+		prunedDetails[key] = helmValuesRaw
+	}
+	// TODO:
+	// case slices.Contains(assetTypes, v1alpha1.SystemAssetTypeOpaConfig):
+	return prunedDetails, nil
+}
+
+func (e *external) getConnectionDetails(ctx context.Context, cr *v1alpha1.System) (managed.ConnectionDetails, error) {
 	if !cr.Spec.ForProvider.HasAssets() {
 		return nil, nil
 	}

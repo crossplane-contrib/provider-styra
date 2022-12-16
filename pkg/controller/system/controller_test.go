@@ -19,13 +19,21 @@ package system
 import (
 	"bytes"
 	"context"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/base64"
+	"encoding/pem"
 	"fmt"
 	"io"
+	"math/big"
+	mathrand "math/rand"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/go-cmp/cmp"
 	"github.com/pkg/errors"
+	"sigs.k8s.io/yaml"
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/meta"
@@ -37,7 +45,7 @@ import (
 	"github.com/mistermx/styra-go-client/pkg/client/systems"
 	"github.com/mistermx/styra-go-client/pkg/models"
 
-	v1alpha1 "github.com/crossplane-contrib/provider-styra/apis/system/v1alpha1"
+	"github.com/crossplane-contrib/provider-styra/apis/system/v1alpha1"
 	styraclient "github.com/crossplane-contrib/provider-styra/pkg/client"
 	mockpolicies "github.com/crossplane-contrib/provider-styra/pkg/client/mock/policies"
 	mocksystem "github.com/crossplane-contrib/provider-styra/pkg/client/mock/systems"
@@ -114,6 +122,18 @@ func withSpec(p v1alpha1.SystemParameters) SystemModifier {
 	return func(r *v1alpha1.System) { r.Spec.ForProvider = p }
 }
 
+func withAnnotationCertExpire(t time.Time) SystemModifier {
+	return func(s *v1alpha1.System) {
+		s.SetLastPublishedConnectionDetailsCertNotAfter(t)
+	}
+}
+
+func withAnnotationConnectionDetailsHash(hash string) SystemModifier {
+	return func(s *v1alpha1.System) {
+		s.SetLastPublishedConnectionDetailsHash(hash)
+	}
+}
+
 func System(m ...SystemModifier) *v1alpha1.System {
 	cr := &v1alpha1.System{}
 	for _, f := range m {
@@ -129,11 +149,44 @@ func TestObserve(t *testing.T) {
 		err    error
 	}
 
+	rand := mathrand.New(mathrand.NewSource(1))
+	key, err := rsa.GenerateKey(rand, 512)
+	if err != nil {
+		t.Error(err)
+	}
+	testCertExpire := time.Now().Add(24 * time.Hour)
+	testCert, err := x509.CreateCertificate(
+		rand,
+		&x509.Certificate{
+			NotAfter:     testCertExpire,
+			SerialNumber: big.NewInt(1),
+		},
+		&x509.Certificate{},
+		&key.PublicKey,
+		key,
+	)
+	if err != nil {
+		t.Error(err)
+	}
+	testCertPem := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: testCert})
+	testCertAsset, _ := yaml.Marshal(map[string]interface{}{
+		"test": "foo",
+		"opa": map[string]interface{}{
+			"Cert": base64.StdEncoding.EncodeToString(testCertPem),
+		},
+	})
+	testCertAsset2, _ := yaml.Marshal(map[string]interface{}{
+		"test": "bar",
+		"opa": map[string]interface{}{
+			"Cert": base64.StdEncoding.EncodeToString(testCertPem),
+		},
+	})
+
 	cases := map[string]struct {
 		args
 		want
 	}{
-		"SuccessfulAvailable": {
+		"SuccessfulAvailableNoConnectionDetails": {
 			args: args{
 				styra: styra.StyraAPI{
 					Systems: withMockSystem(t, func(mcs *mocksystem.MockClientService) {
@@ -160,12 +213,14 @@ func TestObserve(t *testing.T) {
 								Context:   context.Background(),
 							}, &bytes.Buffer{}, gomock.Any()).
 							DoAndReturn(func(params *systems.GetAssetParams, writer io.Writer, _ ...systems.ClientOption) (*systems.GetAssetOK, error) {
-								writer.Write([]byte(testAsset))
+								writer.Write(testCertAsset)
 								return nil, nil
 							})
 					}),
 				},
 				cr: System(
+					withAnnotationCertExpire(testCertExpire),
+					withAnnotationConnectionDetailsHash("29f8555f8eebaeae98d709b9204ab481642f7c27"),
 					withExternalName(testSystemID),
 					withSpec(v1alpha1.SystemParameters{
 						CustomSystemParameters: v1alpha1.CustomSystemParameters{
@@ -191,6 +246,8 @@ func TestObserve(t *testing.T) {
 			},
 			want: want{
 				cr: System(
+					withAnnotationCertExpire(testCertExpire),
+					withAnnotationConnectionDetailsHash("29f8555f8eebaeae98d709b9204ab481642f7c27"),
 					withSpec(v1alpha1.SystemParameters{
 						CustomSystemParameters: v1alpha1.CustomSystemParameters{
 							Labels: map[string]string{
@@ -217,9 +274,6 @@ func TestObserve(t *testing.T) {
 				result: managed.ExternalObservation{
 					ResourceExists:   true,
 					ResourceUpToDate: true,
-					ConnectionDetails: managed.ConnectionDetails{
-						helmValuesConnectionDetailsKey: []byte(testAsset),
-					},
 				},
 			},
 		},
@@ -257,6 +311,7 @@ func TestObserve(t *testing.T) {
 				},
 				cr: System(
 					withExternalName(testSystemID),
+					withAnnotationConnectionDetailsHash("6926b9f92e20f006e67147fbed237a1a69886fb0"),
 					withSpec(v1alpha1.SystemParameters{
 						CustomSystemParameters: v1alpha1.CustomSystemParameters{
 							Labels: map[string]string{
@@ -269,6 +324,7 @@ func TestObserve(t *testing.T) {
 			},
 			want: want{
 				cr: System(
+					withAnnotationConnectionDetailsHash("6926b9f92e20f006e67147fbed237a1a69886fb0"),
 					withSpec(v1alpha1.SystemParameters{
 						CustomSystemParameters: v1alpha1.CustomSystemParameters{
 							Labels: map[string]string{
@@ -352,6 +408,8 @@ func TestObserve(t *testing.T) {
 				},
 				cr: System(
 					withExternalName(testSystemID),
+					withAnnotationCertExpire(testCertExpire),
+					withAnnotationConnectionDetailsHash("6926b9f92e20f006e67147fbed237a1a69886fb0"),
 					withSpec(v1alpha1.SystemParameters{
 						CustomSystemParameters: v1alpha1.CustomSystemParameters{
 							Labels: map[string]string{},
@@ -374,6 +432,8 @@ func TestObserve(t *testing.T) {
 			},
 			want: want{
 				cr: System(
+					withAnnotationCertExpire(testCertExpire),
+					withAnnotationConnectionDetailsHash("6926b9f92e20f006e67147fbed237a1a69886fb0"),
 					withSpec(v1alpha1.SystemParameters{
 						CustomSystemParameters: v1alpha1.CustomSystemParameters{
 							Labels: map[string]string{},
@@ -398,8 +458,383 @@ func TestObserve(t *testing.T) {
 				result: managed.ExternalObservation{
 					ResourceExists:   true,
 					ResourceUpToDate: false,
+				},
+			},
+		},
+		"PublishConnectionDetailsOnExpiredCert": {
+			args: args{
+				styra: styra.StyraAPI{
+					Systems: withMockSystem(t, func(mcs *mocksystem.MockClientService) {
+						mcs.EXPECT().
+							GetSystem(&systems.GetSystemParams{
+								System:  testSystemID,
+								Context: context.Background(),
+							}).
+							Return(&systems.GetSystemOK{
+								Payload: &models.SystemsV1SystemsGetResponse{
+									Result: &models.SystemsV1SystemConfig{
+										Description:          testDescription,
+										DeploymentParameters: &models.SystemsV1SystemDeploymentParameters{},
+										ReadOnly:             styraclient.Bool(true),
+										Type:                 &testType,
+										ExternalID:           testExternalID,
+									},
+								},
+							}, nil)
+						mcs.EXPECT().
+							GetAsset(&systems.GetAssetParams{
+								Assettype: helmValuesAssetType,
+								System:    testSystemID,
+								Context:   context.Background(),
+							}, &bytes.Buffer{}, gomock.Any()).
+							DoAndReturn(func(params *systems.GetAssetParams, writer io.Writer, _ ...systems.ClientOption) (*systems.GetAssetOK, error) {
+								writer.Write(testCertAsset)
+								return nil, nil
+							})
+					}),
+				},
+				cr: System(
+					withExternalName(testSystemID),
+					withAnnotationConnectionDetailsHash("29f8555f8eebaeae98d709b9204ab481642f7c27"),
+					withSpec(v1alpha1.SystemParameters{
+						CustomSystemParameters: v1alpha1.CustomSystemParameters{
+							Labels: map[string]string{
+								testLabelKey: testLabelValue,
+							},
+						},
+						Description: &testDescription,
+						DeploymentParameters: &v1alpha1.V1SystemDeploymentParameters{
+							HTTPProxy:                styraclient.String(""),
+							HTTPSProxy:               styraclient.String(""),
+							KubernetesVersion:        styraclient.String(""),
+							Namespace:                styraclient.String(""),
+							NoProxy:                  styraclient.String(""),
+							TimeoutSeconds:           styraclient.Int32(0),
+							TrustedContainerRegistry: styraclient.String(""),
+						},
+						ReadOnly:   styraclient.Bool(true),
+						Type:       testType,
+						ExternalID: &testExternalID,
+					}),
+				),
+			},
+			want: want{
+				cr: System(
+					withAnnotationCertExpire(testCertExpire),
+					withAnnotationConnectionDetailsHash("29f8555f8eebaeae98d709b9204ab481642f7c27"),
+					withSpec(v1alpha1.SystemParameters{
+						CustomSystemParameters: v1alpha1.CustomSystemParameters{
+							Labels: map[string]string{
+								testLabelKey: testLabelValue,
+							},
+						},
+						Description: &testDescription,
+						DeploymentParameters: &v1alpha1.V1SystemDeploymentParameters{
+							HTTPProxy:                styraclient.String(""),
+							HTTPSProxy:               styraclient.String(""),
+							KubernetesVersion:        styraclient.String(""),
+							Namespace:                styraclient.String(""),
+							NoProxy:                  styraclient.String(""),
+							TimeoutSeconds:           styraclient.Int32(0),
+							TrustedContainerRegistry: styraclient.String(""),
+						},
+						ReadOnly:   styraclient.Bool(true),
+						Type:       testType,
+						ExternalID: &testExternalID,
+					}),
+					withExternalName(testSystemID),
+					withConditions(xpv1.Available()),
+				),
+				result: managed.ExternalObservation{
+					ResourceExists:          true,
+					ResourceUpToDate:        true,
+					ResourceLateInitialized: true,
 					ConnectionDetails: managed.ConnectionDetails{
-						helmValuesConnectionDetailsKey: []byte(testAsset),
+						helmValuesConnectionDetailsKey: testCertAsset,
+					},
+				},
+			},
+		},
+		"PublishConnectionDetailsOnNoExpiredCertAnnotation": {
+			args: args{
+				styra: styra.StyraAPI{
+					Systems: withMockSystem(t, func(mcs *mocksystem.MockClientService) {
+						mcs.EXPECT().
+							GetSystem(&systems.GetSystemParams{
+								System:  testSystemID,
+								Context: context.Background(),
+							}).
+							Return(&systems.GetSystemOK{
+								Payload: &models.SystemsV1SystemsGetResponse{
+									Result: &models.SystemsV1SystemConfig{
+										Description:          testDescription,
+										DeploymentParameters: &models.SystemsV1SystemDeploymentParameters{},
+										ReadOnly:             styraclient.Bool(true),
+										Type:                 &testType,
+										ExternalID:           testExternalID,
+									},
+								},
+							}, nil)
+						mcs.EXPECT().
+							GetAsset(&systems.GetAssetParams{
+								Assettype: helmValuesAssetType,
+								System:    testSystemID,
+								Context:   context.Background(),
+							}, &bytes.Buffer{}, gomock.Any()).
+							DoAndReturn(func(params *systems.GetAssetParams, writer io.Writer, _ ...systems.ClientOption) (*systems.GetAssetOK, error) {
+								writer.Write(testCertAsset)
+								return nil, nil
+							})
+					}),
+				},
+				cr: System(
+					withExternalName(testSystemID),
+					withAnnotationConnectionDetailsHash("29f8555f8eebaeae98d709b9204ab481642f7c27"),
+					withSpec(v1alpha1.SystemParameters{
+						CustomSystemParameters: v1alpha1.CustomSystemParameters{
+							Labels: map[string]string{
+								testLabelKey: testLabelValue,
+							},
+						},
+						Description: &testDescription,
+						DeploymentParameters: &v1alpha1.V1SystemDeploymentParameters{
+							HTTPProxy:                styraclient.String(""),
+							HTTPSProxy:               styraclient.String(""),
+							KubernetesVersion:        styraclient.String(""),
+							Namespace:                styraclient.String(""),
+							NoProxy:                  styraclient.String(""),
+							TimeoutSeconds:           styraclient.Int32(0),
+							TrustedContainerRegistry: styraclient.String(""),
+						},
+						ReadOnly:   styraclient.Bool(true),
+						Type:       testType,
+						ExternalID: &testExternalID,
+					}),
+				),
+			},
+			want: want{
+				cr: System(
+					withAnnotationCertExpire(testCertExpire),
+					withAnnotationConnectionDetailsHash("29f8555f8eebaeae98d709b9204ab481642f7c27"),
+					withSpec(v1alpha1.SystemParameters{
+						CustomSystemParameters: v1alpha1.CustomSystemParameters{
+							Labels: map[string]string{
+								testLabelKey: testLabelValue,
+							},
+						},
+						Description: &testDescription,
+						DeploymentParameters: &v1alpha1.V1SystemDeploymentParameters{
+							HTTPProxy:                styraclient.String(""),
+							HTTPSProxy:               styraclient.String(""),
+							KubernetesVersion:        styraclient.String(""),
+							Namespace:                styraclient.String(""),
+							NoProxy:                  styraclient.String(""),
+							TimeoutSeconds:           styraclient.Int32(0),
+							TrustedContainerRegistry: styraclient.String(""),
+						},
+						ReadOnly:   styraclient.Bool(true),
+						Type:       testType,
+						ExternalID: &testExternalID,
+					}),
+					withExternalName(testSystemID),
+					withConditions(xpv1.Available()),
+				),
+				result: managed.ExternalObservation{
+					ResourceExists:          true,
+					ResourceUpToDate:        true,
+					ResourceLateInitialized: true,
+					ConnectionDetails: managed.ConnectionDetails{
+						helmValuesConnectionDetailsKey: testCertAsset,
+					},
+				},
+			},
+		},
+		"PublishConnectionDetailsOnDifferentHash": {
+			args: args{
+				styra: styra.StyraAPI{
+					Systems: withMockSystem(t, func(mcs *mocksystem.MockClientService) {
+						mcs.EXPECT().
+							GetSystem(&systems.GetSystemParams{
+								System:  testSystemID,
+								Context: context.Background(),
+							}).
+							Return(&systems.GetSystemOK{
+								Payload: &models.SystemsV1SystemsGetResponse{
+									Result: &models.SystemsV1SystemConfig{
+										Description:          testDescription,
+										DeploymentParameters: &models.SystemsV1SystemDeploymentParameters{},
+										ReadOnly:             styraclient.Bool(true),
+										Type:                 &testType,
+										ExternalID:           testExternalID,
+									},
+								},
+							}, nil)
+						mcs.EXPECT().
+							GetAsset(&systems.GetAssetParams{
+								Assettype: helmValuesAssetType,
+								System:    testSystemID,
+								Context:   context.Background(),
+							}, &bytes.Buffer{}, gomock.Any()).
+							DoAndReturn(func(params *systems.GetAssetParams, writer io.Writer, _ ...systems.ClientOption) (*systems.GetAssetOK, error) {
+								writer.Write(testCertAsset2)
+								return nil, nil
+							})
+					}),
+				},
+				cr: System(
+					withAnnotationCertExpire(testCertExpire),
+					withExternalName(testSystemID),
+					withAnnotationConnectionDetailsHash("29f8555f8eebaeae98d709b9204ab481642f7c27"),
+					withSpec(v1alpha1.SystemParameters{
+						CustomSystemParameters: v1alpha1.CustomSystemParameters{
+							Labels: map[string]string{
+								testLabelKey: testLabelValue,
+							},
+						},
+						Description: &testDescription,
+						DeploymentParameters: &v1alpha1.V1SystemDeploymentParameters{
+							HTTPProxy:                styraclient.String(""),
+							HTTPSProxy:               styraclient.String(""),
+							KubernetesVersion:        styraclient.String(""),
+							Namespace:                styraclient.String(""),
+							NoProxy:                  styraclient.String(""),
+							TimeoutSeconds:           styraclient.Int32(0),
+							TrustedContainerRegistry: styraclient.String(""),
+						},
+						ReadOnly:   styraclient.Bool(true),
+						Type:       testType,
+						ExternalID: &testExternalID,
+					}),
+				),
+			},
+			want: want{
+				cr: System(
+					withAnnotationCertExpire(testCertExpire),
+					withAnnotationConnectionDetailsHash("13b5a8deaf7e6d77f020bef04c1668fbd2dff4e2"),
+					withSpec(v1alpha1.SystemParameters{
+						CustomSystemParameters: v1alpha1.CustomSystemParameters{
+							Labels: map[string]string{
+								testLabelKey: testLabelValue,
+							},
+						},
+						Description: &testDescription,
+						DeploymentParameters: &v1alpha1.V1SystemDeploymentParameters{
+							HTTPProxy:                styraclient.String(""),
+							HTTPSProxy:               styraclient.String(""),
+							KubernetesVersion:        styraclient.String(""),
+							Namespace:                styraclient.String(""),
+							NoProxy:                  styraclient.String(""),
+							TimeoutSeconds:           styraclient.Int32(0),
+							TrustedContainerRegistry: styraclient.String(""),
+						},
+						ReadOnly:   styraclient.Bool(true),
+						Type:       testType,
+						ExternalID: &testExternalID,
+					}),
+					withExternalName(testSystemID),
+					withConditions(xpv1.Available()),
+				),
+				result: managed.ExternalObservation{
+					ResourceExists:          true,
+					ResourceUpToDate:        true,
+					ResourceLateInitialized: true,
+					ConnectionDetails: managed.ConnectionDetails{
+						helmValuesConnectionDetailsKey: testCertAsset2,
+					},
+				},
+			},
+		},
+		"PublishConnectionDetailsOnNoHash": {
+			args: args{
+				styra: styra.StyraAPI{
+					Systems: withMockSystem(t, func(mcs *mocksystem.MockClientService) {
+						mcs.EXPECT().
+							GetSystem(&systems.GetSystemParams{
+								System:  testSystemID,
+								Context: context.Background(),
+							}).
+							Return(&systems.GetSystemOK{
+								Payload: &models.SystemsV1SystemsGetResponse{
+									Result: &models.SystemsV1SystemConfig{
+										Description:          testDescription,
+										DeploymentParameters: &models.SystemsV1SystemDeploymentParameters{},
+										ReadOnly:             styraclient.Bool(true),
+										Type:                 &testType,
+										ExternalID:           testExternalID,
+									},
+								},
+							}, nil)
+						mcs.EXPECT().
+							GetAsset(&systems.GetAssetParams{
+								Assettype: helmValuesAssetType,
+								System:    testSystemID,
+								Context:   context.Background(),
+							}, &bytes.Buffer{}, gomock.Any()).
+							DoAndReturn(func(params *systems.GetAssetParams, writer io.Writer, _ ...systems.ClientOption) (*systems.GetAssetOK, error) {
+								writer.Write(testCertAsset2)
+								return nil, nil
+							})
+					}),
+				},
+				cr: System(
+					withAnnotationCertExpire(testCertExpire),
+					withAnnotationConnectionDetailsHash("e9badf8a142a0fca8f84424991f93810ea976a25"),
+					withExternalName(testSystemID),
+					withSpec(v1alpha1.SystemParameters{
+						CustomSystemParameters: v1alpha1.CustomSystemParameters{
+							Labels: map[string]string{
+								testLabelKey: testLabelValue,
+							},
+						},
+						Description: &testDescription,
+						DeploymentParameters: &v1alpha1.V1SystemDeploymentParameters{
+							HTTPProxy:                styraclient.String(""),
+							HTTPSProxy:               styraclient.String(""),
+							KubernetesVersion:        styraclient.String(""),
+							Namespace:                styraclient.String(""),
+							NoProxy:                  styraclient.String(""),
+							TimeoutSeconds:           styraclient.Int32(0),
+							TrustedContainerRegistry: styraclient.String(""),
+						},
+						ReadOnly:   styraclient.Bool(true),
+						Type:       testType,
+						ExternalID: &testExternalID,
+					}),
+				),
+			},
+			want: want{
+				cr: System(
+					withAnnotationCertExpire(testCertExpire),
+					withAnnotationConnectionDetailsHash("13b5a8deaf7e6d77f020bef04c1668fbd2dff4e2"),
+					withSpec(v1alpha1.SystemParameters{
+						CustomSystemParameters: v1alpha1.CustomSystemParameters{
+							Labels: map[string]string{
+								testLabelKey: testLabelValue,
+							},
+						},
+						Description: &testDescription,
+						DeploymentParameters: &v1alpha1.V1SystemDeploymentParameters{
+							HTTPProxy:                styraclient.String(""),
+							HTTPSProxy:               styraclient.String(""),
+							KubernetesVersion:        styraclient.String(""),
+							Namespace:                styraclient.String(""),
+							NoProxy:                  styraclient.String(""),
+							TimeoutSeconds:           styraclient.Int32(0),
+							TrustedContainerRegistry: styraclient.String(""),
+						},
+						ReadOnly:   styraclient.Bool(true),
+						Type:       testType,
+						ExternalID: &testExternalID,
+					}),
+					withExternalName(testSystemID),
+					withConditions(xpv1.Available()),
+				),
+				result: managed.ExternalObservation{
+					ResourceExists:          true,
+					ResourceUpToDate:        true,
+					ResourceLateInitialized: true,
+					ConnectionDetails: managed.ConnectionDetails{
+						helmValuesConnectionDetailsKey: testCertAsset2,
 					},
 				},
 			},
@@ -1369,7 +1804,7 @@ func TestGetConnectionDetails(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			e := &external{client: &tc.styra}
-			actlConnDetails, err := e.GetConnectionDetails(context.Background(), tc.args.cr)
+			actlConnDetails, err := e.getConnectionDetails(context.Background(), tc.args.cr)
 
 			if diff := cmp.Diff(tc.want.err, err, test.EquateErrors()); diff != "" {
 				t.Errorf("r: -want, +got:\n%s", diff)

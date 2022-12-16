@@ -18,10 +18,18 @@ package v1alpha1
 
 import (
 	"strings"
+	"time"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
+)
+
+// System special annotations.
+const (
+	AnnotationLastPublishedConnectionDetailsHash         = "system.styra.crossplane.io/last-published-connection-details-hash"
+	AnnotationLastPublishedConnectionDetailsCertNotAfter = "system.styra.crossplane.io/last-published-connection-details-cert-not-after"
 )
 
 // CustomSystemParameters that are not part of the Styra API spec.
@@ -106,13 +114,19 @@ func (in *SystemParameters) HasLabels() bool {
 	return in.Type == "kubernetes:v2"
 }
 
+// System asset types.
+const (
+	SystemAssetTypeHelmValues = "helm-values"
+	SystemAssetTypeOpaConfig  = "opa-config"
+)
+
 // GetAssetTypes gets available asset types
 func (in *SystemParameters) GetAssetTypes() []string {
 	switch {
 	case strings.HasPrefix(in.Type, "kubernetes"):
-		return []string{"helm-values"}
+		return []string{SystemAssetTypeHelmValues}
 	case in.Type == "custom":
-		return []string{"opa-config"}
+		return []string{SystemAssetTypeOpaConfig}
 	}
 
 	return []string{}
@@ -121,4 +135,33 @@ func (in *SystemParameters) GetAssetTypes() []string {
 // HasAssets whether the system has available assets
 func (in *SystemParameters) HasAssets() bool {
 	return len(in.GetAssetTypes()) > 0
+}
+
+// GetLastPublishedConnectionDetailsHash gets the GetLastPublishedConnectionDetailsHash.
+func (in *System) GetLastPublishedConnectionDetailsHash() string {
+	return in.GetAnnotations()[AnnotationLastPublishedConnectionDetailsHash]
+}
+
+// SetLastPublishedConnectionDetailsHash sets the AnnotationLastPublishedConnectionDetailsHash.
+func (in *System) SetLastPublishedConnectionDetailsHash(val string) {
+	meta.AddAnnotations(in, map[string]string{AnnotationLastPublishedConnectionDetailsHash: val})
+}
+
+// GetLastPublishedConnectionDetailsCertNotAfter gets the expiration timestamp
+// of the last published OPA certificate from AnnotationLastPublishedConnectionDetailsCertNotAfter.
+func (in *System) GetLastPublishedConnectionDetailsCertNotAfter() time.Time {
+	if val, exists := in.GetAnnotations()[AnnotationLastPublishedConnectionDetailsCertNotAfter]; exists {
+		t, err := time.Parse(time.RFC3339, val)
+		if err != nil {
+			return time.Time{}
+		}
+		return t
+	}
+	return time.Time{}
+}
+
+// SetLastPublishedConnectionDetailsCertNotAfter sets the value of
+// AnnotationLastPublishedConnectionDetailsHash.
+func (in *System) SetLastPublishedConnectionDetailsCertNotAfter(val time.Time) {
+	meta.AddAnnotations(in, map[string]string{AnnotationLastPublishedConnectionDetailsCertNotAfter: val.UTC().Format(time.RFC3339)})
 }
