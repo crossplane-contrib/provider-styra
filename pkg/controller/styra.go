@@ -17,29 +17,27 @@ limitations under the License.
 package controller
 
 import (
-	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
-
-	"github.com/crossplane/crossplane-runtime/pkg/logging"
 
 	"github.com/crossplane-contrib/provider-styra/pkg/controller/config"
 	"github.com/crossplane-contrib/provider-styra/pkg/controller/datasource"
 	"github.com/crossplane-contrib/provider-styra/pkg/controller/secret"
 	"github.com/crossplane-contrib/provider-styra/pkg/controller/stack"
 	"github.com/crossplane-contrib/provider-styra/pkg/controller/system"
+	"github.com/crossplane-contrib/provider-styra/pkg/interface/controller"
 )
 
 // Setup creates all Cluster API controllers with the supplied logger and adds
 // them to the supplied manager.
-func Setup(mgr ctrl.Manager, l logging.Logger, rl workqueue.RateLimiter) error {
-	for _, setup := range []func(ctrl.Manager, logging.Logger, workqueue.RateLimiter) error{
+func Setup(mgr ctrl.Manager, o controller.Options) error {
+	for _, setup := range []func(ctrl.Manager, controller.Options) error{
 		config.Setup,
 		secret.SetupSecret,
 		system.SetupSystem,
 		stack.SetupStack,
 		datasource.SetupDataSource,
 	} {
-		if err := setup(mgr, l, rl); err != nil {
+		if err := setup(mgr, o); err != nil {
 			return err
 		}
 	}

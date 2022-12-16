@@ -56,7 +56,6 @@ type DatasourcesV1LDAP struct {
 // DatasourcesV1LDAPAO5Search Search Request.
 // Documentation: https://ldapwiki.com/wiki/SearchRequest
 //
-//
 // swagger:model DatasourcesV1LDAPAO5Search
 type DatasourcesV1LDAPAO5Search struct {
 
