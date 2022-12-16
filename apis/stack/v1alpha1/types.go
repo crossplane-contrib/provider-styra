@@ -17,7 +17,6 @@ limitations under the License.
 package v1alpha1
 
 // V1SourceControlConfig v1 source control config
-//
 type V1SourceControlConfig struct {
 
 	// origin
@@ -26,7 +25,6 @@ type V1SourceControlConfig struct {
 }
 
 // V1GitRepoConfig v1 git repo config
-//
 type V1GitRepoConfig struct {
 
 	// Credentials are looked under the key <name>/<creds>
